@@ -28,7 +28,7 @@
     * @import "components/buttons";
     * @import "components/forms";
     */
-    $fa-font-path: "/fonts";
+    $fa-font-path: "fonts";
     @import "node_modules/@fortawesome/fontawesome-free-webfonts/scss/fontawesome.scss";
     @import "node_modules/@fortawesome/fontawesome-free-webfonts/scss/fa-regular.scss";
     @import "node_modules/@fortawesome/fontawesome-free-webfonts/scss/fa-solid.scss";
@@ -37,6 +37,11 @@
     @import "./components/forms";
     @import "./components/transitions";
     @import "./components/palette";
+
+    html,
+    body {
+        font-family: Helvetica, sans-serif;
+    }
 
     /**
     * This injects all of Tailwind's utility classes, generated based on your
