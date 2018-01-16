@@ -1,7 +1,6 @@
 version: 2
 jobs:
     dependencies:
-        working_directory: ~/project
         docker:
             - image: circleci/node:latest
         steps:
@@ -20,7 +19,6 @@ jobs:
                     - node_modules
 
     build:
-        working_directory: ~/project
         docker:
             - image: circleci/node:latest
         steps:
