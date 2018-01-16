@@ -23,9 +23,6 @@ jobs:
         working_directory: ~/project
         docker:
             - image: circleci/node:latest
-        branches:
-            ignore:
-                - gh-pages
         steps:
             - run:
                 name: Running production build
@@ -47,6 +44,10 @@ workflows:
         - build:
             requires:
                 - dependencies
+            filters:
+                branches:
+                    ignore:
+                        - gh-pages
         - deploy:
             requires:
                 - build
