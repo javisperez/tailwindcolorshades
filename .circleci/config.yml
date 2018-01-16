@@ -63,7 +63,11 @@ workflows:
     version: 2
     build-deploy:
         jobs:
-        - dependencies
+        - dependencies:
+            filters:
+                branches:
+                    ignore:
+                        - gh-pages
         - build:
             requires:
                 - dependencies
