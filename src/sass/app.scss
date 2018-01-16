@@ -28,7 +28,7 @@
     * @import "components/buttons";
     * @import "components/forms";
     */
-    $fa-font-path: "fonts";
+    $fa-font-path: "../fonts";
     @import "node_modules/@fortawesome/fontawesome-free-webfonts/scss/fontawesome.scss";
     @import "node_modules/@fortawesome/fontawesome-free-webfonts/scss/fa-regular.scss";
     @import "node_modules/@fortawesome/fontawesome-free-webfonts/scss/fa-solid.scss";
