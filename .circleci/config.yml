@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/project
+    docker:
+        - image: circleci/node:latest
+    branches:
+        only:
+            - master
+    steps:
+        - checkout
+        - run:
+            name: Updating npm
+            command: 'sudo npm install -g npm@latest'
+        - restore_cache:
+            key: dependency-cache-{{ checksum "package.json" }}
+        - run:
+            name: Install npm dependencies
+            command: npm install
+        - save_cache:
+            key: dependency-cache-{{ checksum "package.json" }}
+            paths:
+                - node_modules
+        - deploy:
+            name: Deploy gh-pages to Github Pages
+            command: ./deploy.sh dist

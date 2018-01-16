@@ -1,0 +1,31 @@
+.btn {
+    @apply .font-bold .py-2 .px-4 .border .border-transparent .rounded;
+
+    &.btn-blue {
+        @apply .bg-blue .text-white;
+
+        &:hover {
+            @apply .bg-blue-dark;
+        }
+    }
+
+    &.btn-orange {
+        @apply .bg-orange .text-white;
+
+        &:hover {
+            @apply .bg-orange-dark;
+        }
+    }
+
+    &.btn-green {
+        @apply .bg-green .text-white;
+
+        &:hover {
+            @apply .bg-green-dark;
+        }
+    }
+
+    &.btn-xs {
+        @apply .text-xs .p-1;
+    }
+}
