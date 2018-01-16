@@ -80,7 +80,8 @@ if (mix.inProduction()) {
 
                 // Specify the locations of any files you want to scan for class names.
                 paths: glob.sync([
-                    path.join(__dirname, 'src/scripts/**/*.vue')
+                    path.join(__dirname, 'src/scripts/**/*.vue'),
+                    path.join(__dirname, 'src/**/*.html')
                 ]),
                 extractors: [
                     {
