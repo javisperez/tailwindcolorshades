@@ -17,19 +17,26 @@ jobs:
                 key: dependency-cache-{{ checksum "package.json" }}
                 paths:
                     - node_modules
-
+            - persist_to_workspace:
+                root: .
+                paths: .
     build:
         docker:
             - image: circleci/node:latest
         steps:
+            - run: npm install
             - run:
                 name: Running production build
                 command: 'npm run production'
-
+            - persist_to_workspace:
+                root: .
+                paths: .
     deploy:
         docker:
             - image: circleci/node:latest
         steps:
+            - run: npm install
+            - run: npm run production
             - deploy:
                 name: Deploy gh-pages to Github Pages
                 command: './deploy.sh dist'
