@@ -24,7 +24,15 @@ jobs:
         docker:
             - image: circleci/node:latest
         steps:
-            - run: npm install
+            - checkout
+            - run:
+                name: Updating npm
+                command: 'sudo npm install -g npm@latest'
+            - restore_cache:
+                key: dependency-cache-{{ checksum "package.json" }}
+            - run:
+                name: Install npm dependencies
+                command: 'npm install'
             - run:
                 name: Running production build
                 command: 'npm run production'
@@ -35,8 +43,18 @@ jobs:
         docker:
             - image: circleci/node:latest
         steps:
-            - run: npm install
-            - run: npm run production
+            - checkout
+            - run:
+                name: Updating npm
+                command: 'sudo npm install -g npm@latest'
+            - restore_cache:
+                key: dependency-cache-{{ checksum "package.json" }}
+            - run:
+                name: Install npm dependencies
+                command: 'npm install'
+            - run:
+                name: Build
+                command: 'npm run production'
             - deploy:
                 name: Deploy gh-pages to Github Pages
                 command: './deploy.sh dist'
