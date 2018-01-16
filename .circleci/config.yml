@@ -35,7 +35,7 @@ jobs:
         docker:
             - image: circleci/node:latest
         steps:
-            - run:
+            - deploy:
                 name: Deploy gh-pages to Github Pages
                 command: './deploy.sh dist'
 
