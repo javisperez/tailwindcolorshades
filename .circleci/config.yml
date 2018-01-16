@@ -1,26 +1,50 @@
 version: 2
 jobs:
-  build:
-    working_directory: ~/project
-    docker:
-        - image: circleci/node:latest
-    branches:
-        only:
-            - master
-    steps:
-        - checkout
-        - run:
-            name: Updating npm
-            command: 'sudo npm install -g npm@latest'
-        - restore_cache:
-            key: dependency-cache-{{ checksum "package.json" }}
-        - run:
-            name: Install npm dependencies
-            command: npm install
-        - save_cache:
-            key: dependency-cache-{{ checksum "package.json" }}
-            paths:
-                - node_modules
+    dependencies:
+        working_directory: ~/project
+            - run:
+                name: Updating npm
+                command: 'sudo npm install -g npm@latest'
+            - restore_cache:
+                key: dependency-cache-{{ checksum "package.json" }}
+            - run:
+                name: Install npm dependencies
+                command: 'npm install'
+            - save_cache:
+                key: dependency-cache-{{ checksum "package.json" }}
+                paths:
+                    - node_modules
+
+    build:
+        working_directory: ~/project
+        docker:
+            - image: circleci/node:latest
+        branches:
+            ignore:
+                - gh-pages
+        steps:
+            - checkout
+            - run:
+                name: Running production build
+                command: 'npm run production'
+
+    deploy:
+        docker:
+            - image: circleci/node:latest
+        name: Deploy gh-pages to Github Pages
+        command: './deploy.sh dist'
+
+workflows:
+    version: 2
+    build-deploy:
+        jobs:
+        - build:
+            requires:
+                - dependencies
         - deploy:
-            name: Deploy gh-pages to Github Pages
-            command: ./deploy.sh dist
+            requires:
+                - dependencies
+                - build
+            filters:
+                branches:
+                    only: master
