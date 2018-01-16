@@ -2,6 +2,10 @@ version: 2
 jobs:
     dependencies:
         working_directory: ~/project
+        docker:
+            - image: circleci/node:latest
+        steps:
+            - checkout
             - run:
                 name: Updating npm
                 command: 'sudo npm install -g npm@latest'
@@ -23,7 +27,6 @@ jobs:
             ignore:
                 - gh-pages
         steps:
-            - checkout
             - run:
                 name: Running production build
                 command: 'npm run production'
@@ -31,19 +34,21 @@ jobs:
     deploy:
         docker:
             - image: circleci/node:latest
-        name: Deploy gh-pages to Github Pages
-        command: './deploy.sh dist'
+        steps:
+            - run:
+                name: Deploy gh-pages to Github Pages
+                command: './deploy.sh dist'
 
 workflows:
     version: 2
     build-deploy:
         jobs:
+        - dependencies
         - build:
             requires:
                 - dependencies
         - deploy:
             requires:
-                - dependencies
                 - build
             filters:
                 branches:
