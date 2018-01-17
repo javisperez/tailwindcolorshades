@@ -50,8 +50,8 @@ export default {
                 return false;
             }
 
-            return palette.color === this.duplicatedColor.color ||
-                palette.name === this.duplicatedColor.name;
+            return palette.color.toLowerCase() === this.duplicatedColor.color.toLowerCase() ||
+                palette.name.toLowerCase() === this.duplicatedColor.name.toLowerCase();
         },
 
         copyCode(code) {
@@ -60,7 +60,7 @@ export default {
 
             range.selectNode(text);
             const sel = window.getSelection();
-            
+
             sel.removeAllRanges();
             sel.addRange(range);
 
@@ -82,12 +82,17 @@ export default {
 
 <template>
     <div class="app">
+        <!-- Header? -->
         <div class="bg-white text-center pt-8 pb-4">
-            <h1 class="pt-8 pb-4">Tailwind Color Shades</h1>
+            <h1 class="pt-8 pb-4">
+                Color Shades Generator
+                <span style="font-size: 80%;">for TailwindCSS</span>
+            </h1>
 
             <new-color class="pt-6" @color:duplicated="notifyDuplicatedColor"></new-color>
         </div>
 
+        <!-- Palettes -->
         <transition-group name="scale-list" tag="div" class="palettes flex flex-wrap justify-around">
             <div class="bg-white p-2 my-4 rounded scale-list-item" v-for="(palette, $index) in colors" :key="palette.name">
                 <palette :color="palette.color" :name="palette.name" :key="$index"
@@ -113,5 +118,38 @@ export default {
                 </div>
             </div>
         </transition-group>
+
+        <!-- Some about text -->
+
+        <div class="container mx-auto mt-8 mb-8 text-center" v-show="!colors.length">
+            <h3>What is this?</h3>
+
+            <p>
+                Is a tool to make shades and tints for a given color and generate the proper code
+                for the TailwindCSS config file.
+            </p>
+
+            <p>
+                The idea is to make the custom color generation a bit easier when creating custom color variants
+                to use in your app's CSS.
+            </p>
+        </div>
+
+        <!-- Footer? -->
+        <footer class="text-center mb-8 text-xs text-grey-dark" style="margin-top: 6rem;">
+            <p>
+                Color shades/tints generator for
+                <a class="text-grey-dark hover:text-grey-darkest"
+                href="https://tailwindcss.com" target="_blank">TailwindCSS</a>
+                by <a class="text-grey-dark hover:text-grey-darkest"
+                    href="https://www.github.com/javisperez">Javis Pérez</a>
+            </p>
+            <p class="mt-2">
+                <a href="https://www.github.com/javisperez/tailwindcolorshades"
+                    class="text-grey-dark hover:text-grey-darkest">
+                    <i class="fab fa-github fa-2x hover:text-grey-darkest"></i>
+                </a>
+            </p>
+        </footer>
     </div>
 </template>

@@ -27,10 +27,9 @@ export default {
 
         addColor() {
             const isColorAlreadyAdded = this.colors.findIndex(c => {
-                    console.log(c.color, this.newColor.color);
                 return (
-                    c.name === this.newColor.name ||
-                    c.color === this.newColor.color
+                    c.name.toLowerCase() === this.newColor.name.toLowerCase() ||
+                    c.color.toLowerCase() === this.newColor.color.toLowerCase()
                 );
             }) > -1;
 
@@ -48,20 +47,53 @@ export default {
             this.reset();
         },
 
-        validateName(e) {
-            if (e.which === 32) {
-                e.preventDefault();
-                return false;
+        validateNameInput(e) {
+            if (e.which === 13) {
+                this.isErrorVisible = !this.newColor.name || !this.newColor.color;
+                return;
             }
 
-            return true;
+            const isValid = e.which !== 32;
+            if (!isValid) {
+                e.preventDefault();
+            }
+
+            return isValid;
+        },
+
+        validateColorInput(e) {
+            if (e.which === 13) {
+                this.isErrorVisible = !this.newColor.name || !this.newColor.color;
+                return;
+            }
+
+            const key = String.fromCharCode(e.charCode || e.which),
+                isValid = /^([#0-9A-F])$/ig.test(key);
+
+            if (!isValid || (this.newColor.color.length > 0 && key === '#')) {
+                e.preventDefault();
+            }
+
+            if (this.newColor.color.length > 5 && this.newColor.color.indexOf('#') === -1) {
+                e.preventDefault();
+            }
+
+            return isValid;
+        },
+
+        validateColor(color) {
+            return /^(#{1})?[0-9A-F]{6}$/i.test(color);
         }
     },
 
     computed: {
         ...mapGetters([
             'colors'
-        ])
+        ]),
+
+        isDisabled() {
+            return !this.newColor.name || !this.validateColor(this.newColor.color) && this.newColor.color;
+        }
     }
 }
 </script>
@@ -75,7 +107,7 @@ export default {
                 </label>
                 <input type="text" class="input orange bg-grey-lighter"
                     v-model="newColor.name" placeholder="eg. Papaya"
-                    @keydown="validateName"
+                    @keydown="validateNameInput"
                     @input="isErrorVisible = null" ref="colorName">
             </div>
 
@@ -85,11 +117,12 @@ export default {
                 </label>
                 <input type="text" class="input orange bg-grey-lighter"
                     v-model="newColor.color" placeholder="eg. #E24E42"
+                    @keypress="validateColorInput" maxlength="7"
                     @input="isErrorVisible = null">
             </div>
 
-            <div class="mt-4 cursor-pointer">
-                <input type="submit" class="btn btn-orange" value="Generate">
+            <div class="mt-6 cursor-pointer">
+                <input type="submit" class="btn btn-orange" :disabled="isDisabled" value="Generate">
             </div>
         </form>
 

@@ -28,4 +28,8 @@
     &.btn-xs {
         @apply .text-xs .p-1;
     }
+
+    &[disabled] {
+        @apply .opacity-50 .cursor-not-allowed;
+    }
 }

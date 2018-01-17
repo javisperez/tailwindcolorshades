@@ -83,6 +83,7 @@ if (mix.inProduction()) {
                     path.join(__dirname, 'src/scripts/**/*.vue'),
                     path.join(__dirname, 'src/**/*.html')
                 ]),
+                whitelistPatterns: [/error-msg-.*/, /scale-list-.*/],
                 extractors: [
                     {
                         extractor: TailwindExtractor,
