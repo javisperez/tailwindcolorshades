@@ -32,6 +32,7 @@ export default {
                     c.color.toLowerCase() === this.newColor.color.toLowerCase()
                 );
             }) > -1;
+            const isColorValid = this.validateColor(this.newColor.color);
 
             if (isColorAlreadyAdded) {
                 this.$emit('color:duplicated', this.newColor);
@@ -40,6 +41,10 @@ export default {
 
             if (!this.newColor.name || !this.newColor.color) {
                 this.isErrorVisible = true;
+                return;
+            }
+
+            if (!isColorValid) {
                 return;
             }
 
@@ -82,6 +87,10 @@ export default {
         },
 
         validateColor(color) {
+            if (!color) {
+                return false;
+            }
+
             return /^(#{1})?[0-9A-F]{6}$/i.test(color);
         }
     },

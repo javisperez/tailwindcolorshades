@@ -20,6 +20,29 @@ jobs:
             - persist_to_workspace:
                 root: .
                 paths: .
+    test:
+        docker:
+            - image: circleci/node:latest
+        steps:
+            - checkout
+            - run:
+                name: Updating npm
+                command: 'sudo npm install -g npm@latest'
+            - restore_cache:
+                key: dependency-cache-{{ checksum "package.json" }}
+            - run:
+                name: Install npm dependencies
+                command: 'npm install'
+            - save_cache:
+                key: dependency-cache-{{ checksum "package.json" }}
+                paths:
+                    - node_modules
+            - run:
+                name: Running unit tests
+                command: 'yarn test'
+            - persist_to_workspace:
+                root: .
+                paths: .
     build:
         docker:
             - image: circleci/node:latest
