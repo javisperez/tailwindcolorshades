@@ -94,6 +94,7 @@ workflows:
         - build:
             requires:
                 - dependencies
+                - test
             filters:
                 branches:
                     ignore:
