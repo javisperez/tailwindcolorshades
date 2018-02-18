@@ -14,7 +14,7 @@ export default {
     data() {
         return {
             duplicatedColor: null,
-            inClipboard: null
+            inClipboard: null,
         };
     },
 
@@ -144,7 +144,7 @@ export default {
         </div>
 
         <!-- Palettes -->
-        <transition-group name="scale-list" tag="div" class="palettes flex flex-wrap justify-around">
+        <div name="scale-list" tag="div" class="palettes flex flex-wrap justify-around">
             <div class="bg-white p-2 my-4 rounded scale-list-item"
                 v-for="(palette, $index) in colors" :key="palette.name">
                 <palette :color="palette.color" :name="palette.name" :key="$index"
@@ -169,7 +169,7 @@ export default {
                     </ul>
                 </div>
             </div>
-        </transition-group>
+        </div>
 
         <!-- Some about text -->
         <div class="container mx-auto mt-8 mb-8 text-center" v-show="!colors.length">

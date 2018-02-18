@@ -148,6 +148,7 @@ export default {
                 return;
             }
 
+            this.$store.commit('RENAME_COLOR', { currentName: this.colorName, newName: this.newName });
             this.colorName = this.newName;
             this.generate();
             this.isRenaming = false;

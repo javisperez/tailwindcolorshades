@@ -17,6 +17,16 @@ const state = {
 
         SET_COLOR_OUTPUT(state, { index, output }) {
             state.colors[index].output = output;
+        },
+
+        RENAME_COLOR(state, { currentName, newName }) {
+            const index = state.colors.findIndex(c => c.name.toLowerCase() === currentName.toLowerCase());
+
+            if (index === -1) {
+                return;
+            }
+
+            state.colors[index].name = newName;
         }
     },
 

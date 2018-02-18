@@ -10,13 +10,13 @@
 }
 
 .scale-list {
-    &-item {
-        transition: all 1s;
-    }
+    // &-item {
+    //     transition: transform 1s, box-shadow 0.4s;
+    // }
 
-    &-enter,
-    &-leave-to {
-        opacity: 0;
-        transform: translateY(30px);
-    }
+    // &-enter,
+    // &-leave-to {
+    //     opacity: 0;
+    //     transform: translateY(30px);
+    // }
 }
