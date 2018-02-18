@@ -7,8 +7,18 @@ export default {
         color: String
     },
 
+    created() {
+        this.colorName = this.name;
+    },
+
     data() {
         return {
+            newName: '',
+
+            colorName: '',
+
+            isRenaming: false,
+
             tints: {
                 lightest: 0.9,
                 lighter: 0.6,
@@ -81,13 +91,16 @@ export default {
         },
 
         generate() {
+            // Reset the colors
+            this.colors = [];
+
             // Tints
             for (const key in this.tints) {
                 const tint = this.tints[key],
                     tinted = this.tint(this.color, tint);
 
                 this.colors.push({
-                    name: `${this.name.replace(/\s/ig, '-')}-${key}`,
+                    name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
                     label: key,
                     background: tinted,
                     text: this.getTextColor(tinted)
@@ -96,7 +109,7 @@ export default {
 
             // Base
             this.colors.push({
-                name: this.name.replace(/\s/ig, '-'),
+                name: this.colorName.replace(/\s/ig, '-'),
                 label: 'base',
                 background: `#${this.color}`,
                 text: this.getTextColor(this.color)
@@ -108,7 +121,7 @@ export default {
                     shaded = this.shade(this.color, shade);
 
                 this.colors.push({
-                    name: `${this.name.replace(/\s/ig, '-')}-${key}`,
+                    name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
                     label: key,
                     background: shaded,
                     text: this.getTextColor(shaded)
@@ -117,8 +130,26 @@ export default {
 
             // Notify our parent that we're done
             this.$emit('generate', this.colors);
-        }
+        },
 
+        rename() {
+            this.colorName = this.newName;
+            this.generate();
+            this.isRenaming = false;
+        }
+    },
+
+    watch: {
+        isRenaming(value) {
+            if (!value)
+                return;
+
+            this.newName = this.colorName;
+
+            this.$nextTick(_ => {
+                this.$refs.newName.focus();
+            });
+        }
     },
 
     computed: {
@@ -131,7 +162,7 @@ export default {
 
 <template>
     <div class="palette">
-        <span class="close float-right p-2 cursor-pointer" @click="remove()">
+        <span class="close float-right m-4 cursor-pointer" @click="remove()">
             <i class="far fa-trash-alt text-white"></i>
         </span>
         <ul class="list-reset">
@@ -139,7 +170,10 @@ export default {
                     backgroundColor: '#'+color,
                     color: text
                 }">
-                <div>{{ name }}</div>
+                <div v-if="!isRenaming" class="cursor-pointer" @click="isRenaming = true">{{ colorName }}</div>
+                <div v-else>
+                    <input autofocus ref="newName" type="text" @keyup.enter="rename()" @keyup.esc="isRenaming = false" v-model="newName">
+                </div>
                 <div class="color-code">#{{ color }}</div>
             </li>
             <!-- Tints and shades -->
@@ -148,7 +182,7 @@ export default {
                     color: color.text
                 }" :key="$index">
                 <span>{{ color.label }}</span>
-                <span class="color-code float-right">{{ color.background }}</span>
+                <span class="color-code float-right">{{ color.background.toUpperCase() }}</span>
             </li>
         </ul>
     </div>

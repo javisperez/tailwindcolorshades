@@ -116,7 +116,7 @@ export default {
                     </span>
                     <ul :class="'list-reset italic text-grey p-4 palette-code hex' + palette.color">
                         <li class="pb-2" v-for="(hex, name) in palette.output">
-                            '{{ name }}' : '{{ hex }}',
+                            '{{ name }}' : '{{ hex.toUpperCase() }}',
                         </li>
                     </ul>
                 </div>
