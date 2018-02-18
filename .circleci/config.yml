@@ -12,9 +12,6 @@ jobs:
             - run:
                 name: Install npm dependencies
                 command: 'npm install'
-            - run:
-                name: Installing process-nextick-args
-                command: 'npm install -g process-nextick-args'
             - save_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
                 paths:
