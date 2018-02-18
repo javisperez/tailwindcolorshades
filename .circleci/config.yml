@@ -1,25 +1,5 @@
 version: 2
 jobs:
-    dependencies:
-        docker:
-            - image: circleci/node:latest
-        steps:
-            - checkout
-            - run:
-                name: Updating npm
-                command: 'sudo npm install -g npm@latest'
-            - restore_cache:
-                key: dependency-cache-{{ checksum "package.json" }}
-            - run:
-                name: Install npm dependencies
-                command: 'npm install'
-            - save_cache:
-                key: dependency-cache-{{ checksum "package.json" }}
-                paths:
-                    - node_modules
-            - persist_to_workspace:
-                root: .
-                paths: .
     test:
         docker:
             - image: circleci/node:6-browsers
@@ -27,14 +7,14 @@ jobs:
                   CHROME_BIN: "/usr/bin/google-chrome"
         steps:
             - checkout
-            - run:
-                name: Updating npm
-                command: 'sudo npm install -g npm@latest'
             - restore_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
             - run:
                 name: Install npm dependencies
                 command: 'npm install'
+            - run:
+                name: Installing process-nextick-args
+                command: 'npm install -g process-nextick-args'
             - save_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
                 paths:
@@ -50,9 +30,6 @@ jobs:
             - image: circleci/node:latest
         steps:
             - checkout
-            - run:
-                name: Updating npm
-                command: 'sudo npm install -g npm@latest'
             - restore_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
             - run:
@@ -69,9 +46,6 @@ jobs:
             - image: circleci/node:latest
         steps:
             - checkout
-            - run:
-                name: Updating npm
-                command: 'sudo npm install -g npm@latest'
             - restore_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
             - run:
@@ -88,11 +62,6 @@ workflows:
     version: 2
     build-deploy:
         jobs:
-        - dependencies:
-            filters:
-                branches:
-                    ignore:
-                        - gh-pages
         - test:
             filters:
                 branches:
@@ -100,7 +69,6 @@ workflows:
                         - gh-pages
         - build:
             requires:
-                - dependencies
                 - test
             filters:
                 branches:
