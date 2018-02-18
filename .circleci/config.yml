@@ -22,7 +22,10 @@ jobs:
                 paths: .
     test:
         docker:
-            - image: circleci/node:latest
+            - image: circleci/node:6-browsers
+                env:
+                - DISPLAY=:99
+                - CHROME_BIN=/usr/bin/google-chrome
         steps:
             - checkout
             - run:
