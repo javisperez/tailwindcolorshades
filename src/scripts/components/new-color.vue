@@ -102,8 +102,8 @@ export default {
 
 <template>
     <div class="new-color">
-        <form @submit.prevent="addColor" class="flex flex-wrap justify-around flex-1 mx-auto" style="max-width: 600px;">
-            <div class="mr-2">
+        <form @submit.prevent="addColor" class="flex flex-wrap justify-around flex-1 mx-auto">
+            <div class="mr-2 flex flex-col flex-1">
                 <label class="block text-left font-bold">
                     Color name <span class="text-red">*</span>
                 </label>
@@ -113,7 +113,7 @@ export default {
                     @input="isErrorVisible = null" ref="colorName">
             </div>
 
-            <div class="mr-2">
+            <div class="mr-2 flex flex-col flex-1">
                 <label class="block text-left font-bold">
                     Hex code <span class="text-red">*</span>
                 </label>

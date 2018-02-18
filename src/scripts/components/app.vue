@@ -73,6 +73,31 @@ export default {
             setTimeout(() => {
                 this.inClipboard = null;
             }, 5000);
+        },
+
+        copyAll() {
+            const text = document.querySelector('.palettes-codes'),
+                range = document.createRange();
+
+            if (!text) {
+                return;
+            }
+
+            range.selectNode(text);
+            const sel = window.getSelection();
+
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            document.execCommand('copy');
+
+            sel.removeAllRanges();
+
+            this.inClipboard = 'all';
+
+            setTimeout(() => {
+                this.inClipboard = null;
+            }, 5000);
         }
     },
 
@@ -93,7 +118,26 @@ export default {
                 <span style="font-size: 80%;">for TailwindCSS</span>
             </h1>
 
-            <new-color class="pt-6" @color:duplicated="notifyDuplicatedColor"></new-color>
+            <div class="relative mx-auto" style="max-width: 700px">
+                <new-color class="pt-6 pb-4" @color:duplicated="notifyDuplicatedColor"></new-color>
+                <div class="text-right text-xs" :class="{
+                    'opacity-0': !colors.length,
+                    'text-link': colors.length
+                    }" style="transition: opacity 0.4s;">
+                    <span :class="{'pointer-events-none': !colors.length}" @click="copyAll()">
+                        <i class="far fa-copy"></i> Copy all generated codes
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="palettes-codes opacity-0 absolute hover:shadow-md" style="z-index: -1">
+            <ul class="list-reset italic text-grey p-4"
+                v-for="(palette, $index) in colors" :key="palette.name">
+                <li class="pb-2" v-for="(hex, name) in palette.output">
+                    '{{ name }}' : '{{ hex.toUpperCase() }}',
+                </li>
+            </ul>
         </div>
 
         <!-- Palettes -->

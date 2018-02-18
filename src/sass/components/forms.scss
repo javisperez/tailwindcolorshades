@@ -16,6 +16,10 @@
     &.orange:focus {
         @apply .border-orange-light;
     }
+
+    &.xs {
+        @apply .px-2 .py-1;
+    }
 }
 
 input,

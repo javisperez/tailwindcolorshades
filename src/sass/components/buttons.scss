@@ -33,3 +33,11 @@
         @apply .opacity-50 .cursor-not-allowed;
     }
 }
+
+.text-link {
+    @apply .text-blue cursor-pointer;
+
+    &:hover {
+        @apply .underline .text-blue-dark;
+    }
+}

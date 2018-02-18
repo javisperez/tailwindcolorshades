@@ -170,9 +170,9 @@ export default {
                     backgroundColor: '#'+color,
                     color: text
                 }">
-                <div v-if="!isRenaming" class="cursor-pointer" @click="isRenaming = true">{{ colorName }}</div>
+                <div v-if="!isRenaming" class="cursor-pointer hover:opacity-75" @click="isRenaming = true">{{ colorName }}</div>
                 <div v-else>
-                    <input autofocus ref="newName" type="text" @keyup.enter="rename()" @keyup.esc="isRenaming = false" v-model="newName">
+                    <input class="input xs" autofocus ref="newName" type="text" @keyup.enter="rename()" @keyup.esc="isRenaming = false" v-model="newName">
                 </div>
                 <div class="color-code">#{{ color }}</div>
             </li>
