@@ -133,6 +133,21 @@ export default {
         },
 
         rename() {
+            if (this.newName === this.colorName) {
+                this.isRenaming = false;
+                return;
+            }
+
+            const isColorAlreadyAdded = this.allColors.findIndex(c => c.name.toLowerCase() === this.newName.toLowerCase()) > -1;
+
+            if (isColorAlreadyAdded) {
+                this.$emit('color:duplicated', {
+                    name: this.newName,
+                    color: this.color
+                });
+                return;
+            }
+
             this.colorName = this.newName;
             this.generate();
             this.isRenaming = false;
@@ -153,6 +168,10 @@ export default {
     },
 
     computed: {
+        allColors() {
+            return this.$store.getters.colors;
+        },
+
         text() {
             return this.getTextColor(this.color);
         }

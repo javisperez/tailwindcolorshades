@@ -75,7 +75,7 @@ export default {
             }, 5000);
         },
 
-        copyAll() {
+        copyAllCodes() {
             const text = document.querySelector('.palettes-codes'),
                 range = document.createRange();
 
@@ -124,14 +124,14 @@ export default {
                     'opacity-0': !colors.length,
                     'text-link': colors.length
                     }" style="transition: opacity 0.4s;">
-                    <span :class="{'pointer-events-none': !colors.length}" @click="copyAll()">
+                    <span :class="{'pointer-events-none': !colors.length}" @click="copyAllCodes()">
                         <i class="far fa-copy"></i> Copy all generated codes
                     </span>
                 </div>
             </div>
         </div>
 
-        <div class="palettes-codes opacity-0 absolute hover:shadow-md" style="z-index: -1">
+        <div class="palettes-codes opacity-0 absolute" style="z-index: -1">
             <ul class="list-reset italic text-grey p-4"
                 v-for="(palette, $index) in colors" :key="palette.name">
                 <li class="pb-2" v-for="(hex, name) in palette.output">
@@ -142,9 +142,11 @@ export default {
 
         <!-- Palettes -->
         <transition-group name="scale-list" tag="div" class="palettes flex flex-wrap justify-around">
-            <div class="bg-white p-2 my-4 rounded scale-list-item" v-for="(palette, $index) in colors" :key="palette.name">
+            <div class="bg-white p-2 my-4 rounded scale-list-item hover:shadow-md"
+                v-for="(palette, $index) in colors" :key="palette.name">
                 <palette :color="palette.color" :name="palette.name" :key="$index"
                     @remove="removeColor($index)" @generate="setColorOutput($index, $event)"
+                    @color:duplicated="notifyDuplicatedColor"
                     :class="{'duplicated': isDuplicated(palette)}"></palette>
 
                 <div class="color-output mt-4">
@@ -152,8 +154,7 @@ export default {
                     <span :class="[
                         'btn btn-blue btn-xs float-right -mt-1 cursor-pointer',
                         inClipboard === palette.color ? 'btn-green' : ''
-                        ]"
-                        @click="copyCode(palette)">
+                        ]" @click="copyCode(palette)">
                         <span>
                             <i class="far fa-check-circle" v-show="inClipboard === palette.color"></i> {{ inClipboard === palette.color ? 'copied' : 'copy to clipboard' }}
                         </span>
@@ -168,7 +169,6 @@ export default {
         </transition-group>
 
         <!-- Some about text -->
-
         <div class="container mx-auto mt-8 mb-8 text-center" v-show="!colors.length">
             <h3>What is this?</h3>
 
