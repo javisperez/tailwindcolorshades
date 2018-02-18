@@ -76,19 +76,18 @@ export default {
         getTextColor(color) {
             const {r, g, b} = this.hexToRgb(color.replace(/#/ig, '')),
                 luma = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
-            
+
             return (luma < 120) ? '#fff' : '#333';
         },
 
         generate() {
-            console.log(this.color);
             // Tints
             for (const key in this.tints) {
                 const tint = this.tints[key],
                     tinted = this.tint(this.color, tint);
 
                 this.colors.push({
-                    name: `${this.name}-${key}`,
+                    name: `${this.name.replace(/\s/ig, '-')}-${key}`,
                     label: key,
                     background: tinted,
                     text: this.getTextColor(tinted)
@@ -97,7 +96,7 @@ export default {
 
             // Base
             this.colors.push({
-                name: this.name,
+                name: this.name.replace(/\s/ig, '-'),
                 label: 'base',
                 background: `#${this.color}`,
                 text: this.getTextColor(this.color)
@@ -109,7 +108,7 @@ export default {
                     shaded = this.shade(this.color, shade);
 
                 this.colors.push({
-                    name: `${this.name}-${key}`,
+                    name: `${this.name.replace(/\s/ig, '-')}-${key}`,
                     label: key,
                     background: shaded,
                     text: this.getTextColor(shaded)

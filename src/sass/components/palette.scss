@@ -5,7 +5,7 @@
     &.duplicated {
         animation: tada 1s;
     }
-    
+
     li {
         @apply .py-4 .px-2 .capitalize;
 
@@ -19,10 +19,6 @@
 
         &:first-child {
             @apply .rounded-t;
-
-            > div:first-child {
-                @apply .uppercase;
-            }
         }
 
         &:last-child {
@@ -35,10 +31,10 @@
     }
 }
 
-@keyframes tada { 
-    0% {transform: scale(1);} 
-    10%, 20% {transform: scale(0.9) rotate(-3deg);} 
-    30%, 50%, 70%, 90% {transform: scale(1.1) rotate(3deg);} 
-    40%, 60%, 80% {transform: scale(1.1) rotate(-3deg);} 
+@keyframes tada {
+    0% {transform: scale(1);}
+    10%, 20% {transform: scale(0.9) rotate(-3deg);}
+    30%, 50%, 70%, 90% {transform: scale(1.1) rotate(3deg);}
+    40%, 60%, 80% {transform: scale(1.1) rotate(-3deg);}
     100% {transform: scale(1) rotate(0);}
  }

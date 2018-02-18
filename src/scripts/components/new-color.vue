@@ -57,13 +57,6 @@ export default {
                 this.isErrorVisible = !this.newColor.name || !this.newColor.color;
                 return;
             }
-
-            const isValid = e.which !== 32;
-            if (!isValid) {
-                e.preventDefault();
-            }
-
-            return isValid;
         },
 
         validateColorInput(e) {
