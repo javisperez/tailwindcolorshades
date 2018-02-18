@@ -124,8 +124,11 @@ export default {
                     'opacity-0': !colors.length,
                     'text-link': colors.length
                     }" style="transition: opacity 0.4s;">
-                    <span :class="{'pointer-events-none': !colors.length}" @click="copyAllCodes()">
+                    <span v-show="inClipboard !== 'all'" :class="{'pointer-events-none': !colors.length}" @click="copyAllCodes()">
                         <i class="far fa-copy"></i> Copy all generated codes
+                    </span>
+                    <span v-show="inClipboard === 'all'" :class="{'pointer-events-none': !colors.length}" @click="copyAllCodes()">
+                        <i class="far fa-check-circle"></i> Copied
                     </span>
                 </div>
             </div>
