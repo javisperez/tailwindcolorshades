@@ -1,3 +1,9 @@
+.scale-list-item {
+    &:hover {
+        @apply .shadow-lg;
+    }
+}
+
 .palette {
     @apply .list-reset;
     width: 300px;

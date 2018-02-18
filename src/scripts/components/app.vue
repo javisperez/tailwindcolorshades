@@ -145,7 +145,7 @@ export default {
 
         <!-- Palettes -->
         <transition-group name="scale-list" tag="div" class="palettes flex flex-wrap justify-around">
-            <div class="bg-white p-2 my-4 rounded scale-list-item hover:shadow-md"
+            <div class="bg-white p-2 my-4 rounded scale-list-item"
                 v-for="(palette, $index) in colors" :key="palette.name">
                 <palette :color="palette.color" :name="palette.name" :key="$index"
                     @remove="removeColor($index)" @generate="setColorOutput($index, $event)"
