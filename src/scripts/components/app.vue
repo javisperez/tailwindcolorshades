@@ -69,6 +69,10 @@ export default {
             sel.removeAllRanges();
 
             this.inClipboard = code.color;
+
+            setTimeout(() => {
+                this.inClipboard = null;
+            }, 5000);
         }
     },
 
