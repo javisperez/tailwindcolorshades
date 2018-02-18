@@ -91,6 +91,11 @@ workflows:
                 branches:
                     ignore:
                         - gh-pages
+        - test:
+            filters:
+                branches:
+                    ignore:
+                        - gh-pages
         - build:
             requires:
                 - dependencies
