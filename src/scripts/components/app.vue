@@ -15,10 +15,32 @@ export default {
         return {
             duplicatedColor: null,
             inClipboard: null,
+            query: []
         };
     },
 
+    mounted() {
+        if (window.location.search) {
+            this.setColors();
+        }
+    },
+
     methods: {
+        setColors() {
+            this.setQuery();
+            for (var color in this.query) {
+                if (this.query[color].color.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
+                    this.$store.commit('ADD_COLOR', this.query[color]);
+                }
+            }
+        },
+        setQuery() {
+            let query = window.location.search.substring(1);
+            let entries = query.split('&');
+            for (var i = 0; i < entries.length; i++) {
+                this.query.push({name: entries[i].split('=')[0], color: '#' + entries[i].split('=')[1]});
+            }
+        },
         removeColor(index) {
             this.$store.commit('REMOVE_COLOR', { index });
         },
