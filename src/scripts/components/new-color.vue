@@ -50,6 +50,10 @@ export default {
 
             this.$store.commit('ADD_COLOR', this.newColor);
             this.reset();
+
+            // Now the query string
+            const querystring = this.colors.map(item => `${item.name}=${item.color}`).join('&');
+            window.location.search = querystring;
         },
 
         validateNameInput(e) {

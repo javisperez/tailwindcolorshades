@@ -35,6 +35,7 @@ export default {
                 }
             }
         },
+
         setQuery() {
             let query = window.location.search.substring(1);
             let entries = query.split('&');
@@ -47,6 +48,7 @@ export default {
                 this.query[name] = color;
             }
         },
+
         removeColor(index) {
             this.$store.commit('REMOVE_COLOR', { index });
         },
