@@ -47,8 +47,16 @@ mix
         './node_modules/@fortawesome/fontawesome-free-webfonts/webfonts'
     ], './dist/fonts')
 
+    // Copy images
+    .copyDirectory('./assets/images', './dist/images')
+
+    // Copy favicons
+    .copyDirectory('./assets/favicons', './dist/favicons')
+
+    // Bundle js
     .js('./src/scripts/index.js', 'dist/js/app.js')
 
+    // Compile scss
     .sass('./src/sass/app.scss', 'dist/css/app.css')
 
     .options({
