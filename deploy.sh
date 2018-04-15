@@ -5,14 +5,7 @@
 pwd
 
 remote=$(git config remote.origin.url)
-
-siteSource="$1"
-
-if [ ! -d "$siteSource" ]
-then
-    echo "Usage: $0 <site source dir>"
-    exit 1
-fi
+ga=$(cat ga | sed s/'$GA_TRACKING_ID'/"$GA_TRACKING_ID"/g)
 
 # make a directory to put the gp-pages branch
 mkdir gh-pages-branch
@@ -29,7 +22,11 @@ git checkout gh-pages
 git rm -rf .
 
 # copy over or recompile the new site
-cp -a "../${siteSource}/." .
+cp -a "../dist/." .
+
+# append the analytics/tracking script
+sed "s#</body>#$(echo $ga)</body>#" dist/tmp.html
+mv dist/tmp.html dist/index.html
 
 # stage any changes and new files
 git add -A
