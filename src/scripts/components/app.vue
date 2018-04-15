@@ -20,7 +20,7 @@ export default {
     },
 
     mounted() {
-        if (window.location.search) {
+        if (this.$route.query) {
             this.$track('colors', 'from-url', window.location.search.substring(1));
             this.setColors();
         }
@@ -28,29 +28,17 @@ export default {
 
     methods: {
         setColors() {
-            this.setQuery();
-            for (const name in this.query) {
-                const color = this.query[name];
+            const query = this.$route.query;
+            for (const name in query) {
+                const color = `#${query[name]}`;
                 if (color.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
                     this.$store.commit('ADD_COLOR', {name, color});
                 }
             }
         },
 
-        setQuery() {
-            let query = window.location.search.substring(1);
-            let entries = query.split('&');
-            for (const item of entries) {
-                const parts = item.split('=');
-                // Handle spaces
-                const name = decodeURI(parts[0]).replace(/\s/g, '-');
-                const color = `#${parts[1]}`;
-                // Use an object instead of an array to avoid duplicated color names
-                this.query[name] = color;
-            }
-        },
-
         removeColor(index) {
+            this.$track('colors', 'removed', `${this.colors[index].name}:${this.colors[index].color}`);
             this.$store.commit('REMOVE_COLOR', { index });
         },
 

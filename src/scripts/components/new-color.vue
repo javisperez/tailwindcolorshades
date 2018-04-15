@@ -54,8 +54,9 @@ export default {
             this.reset();
 
             // Now the query string
-            const querystring = this.colors.map(item => `${item.name}=${item.color}`).join('&');
-            window.location.search = querystring;
+            const query = {};
+            this.colors.forEach(i => { query[i.name] = i.color });
+            this.$router.push({ path: '/', query });
         },
 
         validateNameInput(e) {

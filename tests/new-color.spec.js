@@ -1,10 +1,24 @@
 import Vue from 'vue';
+import VueRouter from 'vue-router';
 import store from 'store';
 import newColor from 'components/new-color.vue';
+import gaTrack from 'support/gaTrack';
+
+import { app } from 'components';
+
+Vue.use(gaTrack);
+Vue.use(VueRouter);
 
 Vue.config.devtools = false;
 Vue.config.productionTip = false;
 
+newColor.router = new VueRouter({
+    routes: [
+        {
+            path: '/', component: app
+        }
+    ]
+});
 // Add the Vuex store
 newColor.store = store;
 

@@ -1,19 +1,29 @@
 import Vue from 'vue';
+import VueRouter from 'vue-router';
 import store from './store';
 import gaTrack from './support/gaTrack';
 
-import * as components from './components';
+import { app } from './components';
 
+Vue.use(VueRouter);
 Vue.use(gaTrack);
+
+const router = new VueRouter({
+    routes: [
+        {
+            path: '/', component: app
+        }
+    ]
+});
 
 new Vue({
     el: '#app',
     name: 'tailwind-color-shades',
-    components,
+    router,
     store,
     template: `
     <div>
-        <app></app>
+        <router-view></router-view>
     </div>
     `
 });

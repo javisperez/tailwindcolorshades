@@ -16,6 +16,7 @@
     "laravel-mix": "^1.7.2",
     "purgecss-webpack-plugin": "^0.18.0",
     "vue": "^2.5.13",
+    "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
