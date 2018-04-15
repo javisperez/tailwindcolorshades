@@ -1,19 +1,17 @@
 export default {
     install(Vue) {
-        Vue.prototype.$track = (category, action, label = '', options = { eventValue: null, nonInteraction: true }) => {
-            if (typeof ga === 'undefined') {
+        Vue.prototype.$track = (category, action, label = '', options = { non_interaction: true }) => {
+            if (typeof gtag === 'undefined') {
                 return;
             }
 
             const params = {
-                hitType: 'event',
-                eventCategory: category,
-                eventAction: action,
-                eventLabel: label,
+                event_category: category,
+                event_label: label,
                 ...options
             };
 
-            ga('send', params);
+            gtag('event', action, params);
         };
     }
 };
