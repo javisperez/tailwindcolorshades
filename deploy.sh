@@ -25,8 +25,8 @@ git rm -rf .
 cp -a "../dist/." .
 
 # append the analytics/tracking script
-sed "s#</body>#$(echo $ga)</body>#" dist/tmp.html
-mv dist/tmp.html dist/index.html
+sed "s#</body>#$(echo $ga)</body>#" index.html > tmp.html
+mv tmp.html index.html
 
 # stage any changes and new files
 git add -A
