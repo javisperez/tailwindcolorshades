@@ -6,13 +6,14 @@ export default {
             }
 
             const params = {
+                hitType: 'event',
                 eventCategory: category,
                 eventAction: action,
                 eventLabel: label,
                 ...options
             };
 
-            ga('send', 'event', params);
+            ga('send', params);
         };
     }
 };
