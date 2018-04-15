@@ -2,11 +2,17 @@ version: 2
 jobs:
     test:
         docker:
-            - image: circleci/node:6-browsers
+            - image: circleci/node:8.10.0-browsers
               environment:
                   CHROME_BIN: "/usr/bin/google-chrome"
         steps:
             - checkout
+            - run:
+                name: Versions
+                command: |
+                    node --version
+                    npm --version
+                    yarn --version
             - restore_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
             - run:
@@ -17,6 +23,9 @@ jobs:
                 paths:
                     - node_modules
             - run:
+                name: rebuild node-sass
+                command: npm rebuild node-sass
+            - run:
                 name: Running unit tests
                 command: 'yarn test'
             - persist_to_workspace:
@@ -24,11 +33,20 @@ jobs:
                 paths: .
     build:
         docker:
-            - image: circleci/node:latest
+            - image: circleci/node:8.10.0-browsers
         steps:
             - checkout
+            - run:
+                name: Versions
+                command: |
+                    node --version
+                    npm --version
+                    yarn --version
             - restore_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
+            - run:
+                name: rebuild node-sass
+                command: npm rebuild node-sass
             - run:
                 name: Install npm dependencies
                 command: 'npm install'
@@ -40,11 +58,20 @@ jobs:
                 paths: .
     deploy:
         docker:
-            - image: circleci/node:latest
+            - image: circleci/node:8.10.0-browsers
         steps:
             - checkout
+            - run:
+                name: Versions
+                command: |
+                    node --version
+                    npm --version
+                    yarn --version
             - restore_cache:
                 key: dependency-cache-{{ checksum "package.json" }}
+            - run:
+                name: rebuild node-sass
+                command: npm rebuild node-sass
             - run:
                 name: Install npm dependencies
                 command: 'npm install'
