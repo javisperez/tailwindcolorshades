@@ -21,6 +21,7 @@ export default {
 
     mounted() {
         if (window.location.search) {
+            this.$track('colors', 'from-url', window.location.search.substring(1));
             this.setColors();
         }
     },
@@ -70,6 +71,8 @@ export default {
 
             this.duplicatedColor = color;
 
+            this.$track('errors', 'color:duplicated', `${color.name}:${color.color}`);
+
             setTimeout(() => {
                 this.duplicatedColor = null;
             }, 1400);
@@ -100,6 +103,8 @@ export default {
 
             this.inClipboard = code.color;
 
+            this.$track('code', 'copied', `${code.name}:${code.color}`);
+
             setTimeout(() => {
                 this.inClipboard = null;
             }, 5000);
@@ -125,6 +130,8 @@ export default {
 
             this.inClipboard = 'all';
 
+            this.$track('code', 'copied:all', 'Copied all code');
+
             setTimeout(() => {
                 this.inClipboard = null;
             }, 5000);
@@ -143,9 +150,12 @@ export default {
     <div class="app">
         <!-- Header? -->
         <div class="bg-white text-center pt-8 pb-4">
-            <h1 class="pt-8 pb-4">
+            <div class="logo">
+                <img src="images/logo.png" width="80" alt="Color shades for Tailwind CSS">
+            </div>
+            <h1 class="font-normal pt-0 pb-4">
                 Color Shades Generator
-                <span style="font-size: 80%;">for TailwindCSS</span>
+                <div class="font-light" style="font-size: 75%;">for Tailwind CSS</div>
             </h1>
 
             <div class="relative mx-auto" style="max-width: 700px">

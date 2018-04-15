@@ -128,6 +128,8 @@ export default {
                 })
             }
 
+            this.$track('colors', 'generated', `${this.name}:${this.color}`);
+
             // Notify our parent that we're done
             this.$emit('generate', this.colors);
         },
@@ -149,6 +151,7 @@ export default {
             }
 
             this.$store.commit('RENAME_COLOR', { currentName: this.colorName, newName: this.newName });
+            this.$track('colors', 'renamed', `${this.colorName} to ${this.newName}`);
             this.colorName = this.newName;
             this.generate();
             this.isRenaming = false;

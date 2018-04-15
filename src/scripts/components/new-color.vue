@@ -40,11 +40,13 @@ export default {
             }
 
             if (!this.newColor.name || !this.newColor.color) {
+                this.$track('errors', 'color:generation', `Empty value name or color (${this.newColor.name}:${this.newColor.color})`);
                 this.isErrorVisible = true;
                 return;
             }
 
             if (!isColorValid) {
+                this.$track('errors', 'color:generation', `Invalid color ${this.newColor.color}`);
                 return;
             }
 
