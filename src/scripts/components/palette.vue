@@ -19,16 +19,16 @@ export default {
 
             isRenaming: false,
 
-            tints: {
-                lightest: 0.9,
-                lighter: 0.6,
-                light: 0.3
+            shades: {
+                darkest: 0.3,
+                darker: 0.6,
+                dark: 0.9
             },
 
-            shades: {
-                dark: 0.9,
-                darker: 0.6,
-                darkest: 0.3
+            tints: {
+                light: 0.3,
+                lighter: 0.6,
+                lightest: 0.9
             },
 
             colors: []
@@ -94,16 +94,16 @@ export default {
             // Reset the colors
             this.colors = [];
 
-            // Tints
-            for (const key in this.tints) {
-                const tint = this.tints[key],
-                    tinted = this.tint(this.color, tint);
+            // Shades
+            for (const key in this.shades) {
+                const shade = this.shades[key],
+                    shaded = this.shade(this.color, shade);
 
                 this.colors.push({
                     name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
                     label: key,
-                    background: tinted,
-                    text: this.getTextColor(tinted)
+                    background: shaded,
+                    text: this.getTextColor(shaded)
                 })
             }
 
@@ -115,16 +115,16 @@ export default {
                 text: this.getTextColor(this.color)
             });
 
-            // Shades
-            for (const key in this.shades) {
-                const shade = this.shades[key],
-                    shaded = this.shade(this.color, shade);
+            // Tints
+            for (const key in this.tints) {
+                const tint = this.tints[key],
+                    tinted = this.tint(this.color, tint);
 
                 this.colors.push({
                     name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
                     label: key,
-                    background: shaded,
-                    text: this.getTextColor(shaded)
+                    background: tinted,
+                    text: this.getTextColor(tinted)
                 })
             }
 
