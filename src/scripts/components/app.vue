@@ -164,8 +164,8 @@ export default {
 
         <div class="palettes-codes opacity-0 absolute" style="z-index: -1">
             <ul class="list-reset italic text-grey p-4"
-                v-for="(palette, $index) in colors" :key="palette.name">
-                <li class="pb-2" v-for="(hex, name) in palette.output">
+                v-for="palette in colors" :key="palette.name">
+                <li class="pb-2" v-for="(hex, name) in palette.output" :key="`${name}:${hex}`">
                     '{{ name }}' : '{{ hex.toUpperCase() }}',
                 </li>
             </ul>
@@ -191,7 +191,7 @@ export default {
                         </span>
                     </span>
                     <ul :class="'list-reset italic text-grey p-4 palette-code hex' + palette.color">
-                        <li class="pb-2" v-for="(hex, name) in palette.output">
+                        <li class="pb-2" v-for="(hex, name) in palette.output" :key="`${name}:${hex}`">
                             '{{ name }}' : '{{ hex.toUpperCase() }}',
                         </li>
                     </ul>
