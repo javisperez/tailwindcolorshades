@@ -1,6 +1,6 @@
 # Color shades generators for TailwindCSS
 
-<a href="https://circleci.com/gh/javisperez/tailwindcolorshades/tree/master"><img src="https://img.shields.io/circleci/project/javisperez/tailwindcolorshades/master.svg" alt="Build Status"></a>
+[![CircleCI branch](https://img.shields.io/circleci/project/github/javisperez/tailwindcolorshades/master.svg)](https://circleci.com/gh/javisperez/tailwindcolorshades/tree/master)
 
 ## To use this app
 Go to [https://javisperez.github.io/tailwindcolorshades](https://javisperez.github.io/tailwindcolorshades)
