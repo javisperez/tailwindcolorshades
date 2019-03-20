@@ -1,186 +1,186 @@
 <script>
-export default {
-    name: 'palette',
+    export default {
+        name: 'palette',
 
-    props: {
-        name: String,
-        color: String
-    },
-
-    created() {
-        this.colorName = this.name;
-    },
-
-    data() {
-        return {
-            newName: '',
-
-            colorName: '',
-
-            isRenaming: false,
-
-            shades: {
-                darkest: 0.3,
-                darker: 0.6,
-                dark: 0.9
-            },
-
-            tints: {
-                light: 0.3,
-                lighter: 0.6,
-                lightest: 0.9
-            },
-
-            colors: []
-        };
-    },
-
-    mounted() {
-        this.generate();
-    },
-
-    methods: {
-        remove() {
-            this.$emit('remove');
+        props: {
+            name: String,
+            color: String
         },
 
-        hexPart: c => `0${c.toString(16)}`.slice(-2),
+        created() {
+            this.colorName = this.name;
+        },
 
-        hexToRgb(hex) {
-            const color = `#${hex}`,
-                components = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
-
-            if (!components) {
-                return null;
-            }
-
+        data() {
             return {
-                r: parseInt(components[1], 16),
-                g: parseInt(components[2], 16),
-                b: parseInt(components[3], 16)
+                newName: '',
+
+                colorName: '',
+
+                isRenaming: false,
+
+                shades: {
+                    darkest: 0.3,
+                    darker: 0.6,
+                    dark: 0.9
+                },
+
+                tints: {
+                    light: 0.3,
+                    lighter: 0.6,
+                    lightest: 0.9
+                },
+
+                colors: []
             };
         },
 
-        rgbToHex(r, g, b) {
-            return `#${this.hexPart(r)}${this.hexPart(g)}${this.hexPart(b)}`;
-        },
-
-        tint(hex, intensity) {
-            const color = this.hexToRgb(hex),
-                r = Math.round(color.r + ((255 - color.r) * intensity)),
-                g = Math.round(color.g + ((255 - color.g) * intensity)),
-                b = Math.round(color.b + ((255 - color.b) * intensity));
-
-            return this.rgbToHex(r, g, b);
-        },
-
-        shade(hex, intensity) {
-            const color = this.hexToRgb(hex),
-                r = Math.round(color.r * intensity),
-                g = Math.round(color.g * intensity),
-                b = Math.round(color.b * intensity);
-
-            return this.rgbToHex(r, g, b);
-        },
-
-        getTextColor(color) {
-            const {r, g, b} = this.hexToRgb(color.replace(/#/ig, '')),
-                luma = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
-
-            return (luma < 120) ? '#fff' : '#333';
-        },
-
-        generate() {
-            // Reset the colors
-            this.colors = [];
-
-            // Shades
-            for (const key in this.shades) {
-                const shade = this.shades[key],
-                    shaded = this.shade(this.color, shade);
-
-                this.colors.push({
-                    name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
-                    label: key,
-                    background: shaded,
-                    text: this.getTextColor(shaded)
-                })
-            }
-
-            // Base
-            this.colors.push({
-                name: this.colorName.replace(/\s/ig, '-'),
-                label: 'base',
-                background: `#${this.color}`,
-                text: this.getTextColor(this.color)
-            });
-
-            // Tints
-            for (const key in this.tints) {
-                const tint = this.tints[key],
-                    tinted = this.tint(this.color, tint);
-
-                this.colors.push({
-                    name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
-                    label: key,
-                    background: tinted,
-                    text: this.getTextColor(tinted)
-                })
-            }
-
-            this.$track('colors', 'generated', `${this.name}:${this.color}`);
-
-            // Notify our parent that we're done
-            this.$emit('generate', this.colors);
-        },
-
-        rename() {
-            if (this.newName === this.colorName) {
-                this.isRenaming = false;
-                return;
-            }
-
-            const isColorAlreadyAdded = this.allColors.findIndex(c => c.name.toLowerCase() === this.newName.toLowerCase()) > -1;
-
-            if (isColorAlreadyAdded) {
-                this.$emit('color:duplicated', {
-                    name: this.newName,
-                    color: this.color
-                });
-                return;
-            }
-
-            this.$store.commit('RENAME_COLOR', { currentName: this.colorName, newName: this.newName });
-            this.$track('colors', 'renamed', `${this.colorName} to ${this.newName}`);
-            this.colorName = this.newName;
+        mounted() {
             this.generate();
-            this.isRenaming = false;
-        }
-    },
-
-    watch: {
-        isRenaming(value) {
-            if (!value)
-                return;
-
-            this.newName = this.colorName;
-
-            this.$nextTick(_ => {
-                this.$refs.newName.focus();
-            });
-        }
-    },
-
-    computed: {
-        allColors() {
-            return this.$store.getters.colors;
         },
 
-        text() {
-            return this.getTextColor(this.color);
+        methods: {
+            remove() {
+                this.$emit('remove');
+            },
+
+            hexPart: c => `0${c.toString(16)}`.slice(-2),
+
+            hexToRgb(hex) {
+                const color = `#${hex}`,
+                    components = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+
+                if (!components) {
+                    return null;
+                }
+
+                return {
+                    r: parseInt(components[1], 16),
+                    g: parseInt(components[2], 16),
+                    b: parseInt(components[3], 16)
+                };
+            },
+
+            rgbToHex(r, g, b) {
+                return `#${this.hexPart(r)}${this.hexPart(g)}${this.hexPart(b)}`;
+            },
+
+            tint(hex, intensity) {
+                const color = this.hexToRgb(hex),
+                    r = Math.round(color.r + ((255 - color.r) * intensity)),
+                    g = Math.round(color.g + ((255 - color.g) * intensity)),
+                    b = Math.round(color.b + ((255 - color.b) * intensity));
+
+                return this.rgbToHex(r, g, b);
+            },
+
+            shade(hex, intensity) {
+                const color = this.hexToRgb(hex),
+                    r = Math.round(color.r * intensity),
+                    g = Math.round(color.g * intensity),
+                    b = Math.round(color.b * intensity);
+
+                return this.rgbToHex(r, g, b);
+            },
+
+            getTextColor(color) {
+                const { r, g, b } = this.hexToRgb(color.replace(/#/ig, '')),
+                    luma = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+
+                return (luma < 120) ? '#FFFFFF' : '#333333';
+            },
+
+            generate() {
+                // Reset the colors
+                this.colors = [];
+
+                // Shades
+                for (const key in this.shades) {
+                    const shade = this.shades[key],
+                        shaded = this.shade(this.color, shade);
+
+                    this.colors.push({
+                        name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
+                        label: key,
+                        background: shaded,
+                        text: this.getTextColor(shaded)
+                    });
+                }
+
+                // Base
+                this.colors.push({
+                    name: this.colorName.replace(/\s/ig, '-'),
+                    label: 'base',
+                    background: `#${this.color}`,
+                    text: this.getTextColor(this.color)
+                });
+
+                // Tints
+                for (const key in this.tints) {
+                    const tint = this.tints[key],
+                        tinted = this.tint(this.color, tint);
+
+                    this.colors.push({
+                        name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
+                        label: key,
+                        background: tinted,
+                        text: this.getTextColor(tinted)
+                    });
+                }
+
+                this.$track('colors', 'generated', `${this.name}:${this.color}`);
+
+                // Notify our parent that we're done
+                this.$emit('generate', this.colors);
+            },
+
+            rename() {
+                if (this.newName === this.colorName) {
+                    this.isRenaming = false;
+                    return;
+                }
+
+                const isColorAlreadyAdded = this.allColors.findIndex(c => c.name.toLowerCase() === this.newName.toLowerCase()) > -1;
+
+                if (isColorAlreadyAdded) {
+                    this.$emit('color:duplicated', {
+                        name: this.newName,
+                        color: this.color
+                    });
+                    return;
+                }
+
+                this.$store.commit('RENAME_COLOR', { currentName: this.colorName, newName: this.newName });
+                this.$track('colors', 'renamed', `${this.colorName} to ${this.newName}`);
+                this.colorName = this.newName;
+                this.generate();
+                this.isRenaming = false;
+            }
+        },
+
+        watch: {
+            isRenaming(value) {
+                if (!value)
+                    return;
+
+                this.newName = this.colorName;
+
+                this.$nextTick(_ => {
+                    this.$refs.newName.focus();
+                });
+            }
+        },
+
+        computed: {
+            allColors() {
+                return this.$store.getters.colors;
+            },
+
+            text() {
+                return this.getTextColor(this.color);
+            }
         }
-    }
-}
+    };
 </script>
 
 <template>
