@@ -19,16 +19,16 @@
 
                 isRenaming: false,
 
-                shades: {
-                    darkest: 0.3,
-                    darker: 0.6,
-                    dark: 0.9
+                tints: {
+                    100: 0.9,
+                    300: 0.6,
+                    400: 0.3,
                 },
 
-                tints: {
-                    light: 0.3,
-                    lighter: 0.6,
-                    lightest: 0.9
+                shades: {
+                    600: 0.9,
+                    700: 0.6,
+                    900: 0.3,
                 },
 
                 colors: []
@@ -94,27 +94,6 @@
                 // Reset the colors
                 this.colors = [];
 
-                // Shades
-                for (const key in this.shades) {
-                    const shade = this.shades[key],
-                        shaded = this.shade(this.color, shade);
-
-                    this.colors.push({
-                        name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
-                        label: key,
-                        background: shaded,
-                        text: this.getTextColor(shaded)
-                    });
-                }
-
-                // Base
-                this.colors.push({
-                    name: this.colorName.replace(/\s/ig, '-'),
-                    label: 'base',
-                    background: `#${this.color}`,
-                    text: this.getTextColor(this.color)
-                });
-
                 // Tints
                 for (const key in this.tints) {
                     const tint = this.tints[key],
@@ -125,6 +104,27 @@
                         label: key,
                         background: tinted,
                         text: this.getTextColor(tinted)
+                    });
+                }
+
+                // Base
+                this.colors.push({
+                    name: `${this.colorName.replace(/\s/ig, '-')}-500`,
+                    label: '500',
+                    background: `#${this.color}`,
+                    text: this.getTextColor(this.color)
+                });
+
+                // Shades
+                for (const key in this.shades) {
+                    const shade = this.shades[key],
+                        shaded = this.shade(this.color, shade);
+
+                    this.colors.push({
+                        name: `${this.colorName.replace(/\s/ig, '-')}-${key}`,
+                        label: key,
+                        background: shaded,
+                        text: this.getTextColor(shaded)
                     });
                 }
 
