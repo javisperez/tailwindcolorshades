@@ -43,13 +43,7 @@ export default {
         },
 
         setColorOutput(index, e) {
-            const output = {};
-
-            for (const c of e) {
-                output[c.name] = c.background;
-            }
-
-            this.$store.commit('SET_COLOR_OUTPUT', { index, output });
+            this.$store.commit('SET_COLOR_OUTPUT', { index, output: e });
         },
 
         notifyDuplicatedColor(color) {
@@ -165,9 +159,11 @@ export default {
         <div class="palettes-codes opacity-0 absolute" style="z-index: -1">
             <ul class="list-reset italic text-grey p-4"
                 v-for="palette in colors" :key="palette.name">
-                <li class="pb-2" v-for="(hex, name) in palette.output" :key="`${name}:${hex}`">
-                    '{{ name }}' : '{{ hex.toUpperCase() }}',
+                <li class="pb-2">'{{ palette.name }}': {</li>
+                <li class="pb-2" v-for="output in palette.output" :key="`${output.name}`">
+                    {{ output.label }}: '{{ output.background.toUpperCase() }}',
                 </li>
+                <li class="pb-2">},</li>
             </ul>
         </div>
 
@@ -191,9 +187,11 @@ export default {
                         </span>
                     </span>
                     <ul :class="'list-reset italic text-grey p-4 palette-code hex' + palette.color">
-                        <li class="pb-2" v-for="(hex, name) in palette.output" :key="`${name}:${hex}`">
-                            '{{ name }}' : '{{ hex.toUpperCase() }}',
+                        <li class="pb-2">'{{ palette.name }}': {</li>
+                        <li class="pb-2" v-for="output in palette.output" :key="`${output.name}`">
+                            {{ output.label }}: '{{ output.background.toUpperCase() }}',
                         </li>
+                        <li class="pb-2">},</li>
                     </ul>
                 </div>
             </div>

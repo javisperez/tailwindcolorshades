@@ -206,7 +206,7 @@
                     backgroundColor: color.background,
                     color: color.text
                 }" :key="$index">
-                <span>{{ color.label }}</span>
+                <span>{{ color.name }}</span>
                 <span class="color-code float-right">{{ color.background.toUpperCase() }}</span>
             </li>
         </ul>
