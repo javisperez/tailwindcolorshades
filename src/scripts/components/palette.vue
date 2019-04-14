@@ -62,7 +62,9 @@ export default {
   },
 
   mounted() {
-    this.generate();
+    this.$nextTick(() => {
+      this.generate();
+    });
   },
 
   methods: {
