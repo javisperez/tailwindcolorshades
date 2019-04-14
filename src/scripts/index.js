@@ -21,9 +21,14 @@ new Vue({
     name: 'tailwind-color-shades',
     router,
     store,
+    computed: {
+        query() {
+            return JSON.stringify(this.$route.query);
+        }
+    },
     template: `
     <div>
-        <router-view></router-view>
+        <router-view :key="query"></router-view>
     </div>
     `
 });

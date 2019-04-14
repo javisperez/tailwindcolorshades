@@ -27,6 +27,10 @@ const state = {
             }
 
             state.colors[index].name = newName;
+        },
+
+        RESET_COLORS(state) {
+            state.colors = [];
         }
     },
 

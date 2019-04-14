@@ -30,6 +30,7 @@ export default {
   methods: {
     setColors() {
       const query = this.$route.query;
+      this.$store.commit("RESET_COLORS");
       for (const name in query) {
         const color = `#${query[name]}`;
         if (color.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
