@@ -154,7 +154,7 @@ export default {
                     Color name <span class="text-red">*</span>
                 </label>
                 <input type="text" class="input orange bg-grey-lighter"
-                    v-model="newColor.name" placeholder="eg. Papaya"
+                    v-model="newColor.name" placeholder="eg. papaya"
                     @keydown="validateNameInput"
                     @input="isErrorVisible = null" ref="colorName">
             </div>

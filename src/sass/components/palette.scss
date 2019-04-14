@@ -15,10 +15,6 @@
     li {
         @apply .py-4 .px-2;
 
-        &:not(:first-child) {
-            @apply .capitalize;
-        }
-
         > div {
             @apply .mb-8;
 
