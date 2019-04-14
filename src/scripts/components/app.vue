@@ -2,20 +2,21 @@
 import { mapGetters } from "vuex";
 import newColor from "./new-color.vue";
 import palette from "./palette.vue";
+import paletteCode from "./palette-code.vue";
 
 export default {
   name: "app",
 
   components: {
     palette,
+    paletteCode,
     newColor
   },
 
   data() {
     return {
       duplicatedColor: null,
-      inClipboard: null,
-      query: {}
+      inClipboard: null
     };
   },
 
@@ -76,29 +77,6 @@ export default {
       );
     },
 
-    copyCode(code) {
-      const text = document.querySelector(`.palette-code.hex${code.color}`),
-        range = document.createRange();
-
-      range.selectNode(text);
-      const sel = window.getSelection();
-
-      sel.removeAllRanges();
-      sel.addRange(range);
-
-      document.execCommand("copy");
-
-      sel.removeAllRanges();
-
-      this.inClipboard = code.color;
-
-      this.$track("code", "copied", `${code.name}:${code.color}`);
-
-      setTimeout(() => {
-        this.inClipboard = null;
-      }, 5000);
-    },
-
     copyAllCodes() {
       const text = document.querySelector(".palettes-codes"),
         range = document.createRange();
@@ -124,11 +102,27 @@ export default {
       setTimeout(() => {
         this.inClipboard = null;
       }, 5000);
+    },
+
+    setTailwindVersion(version = 1) {
+      const query = { ...this.$route.query, tv: version };
+
+      this.$router.push({ path: "/", query });
     }
   },
 
   computed: {
-    ...mapGetters(["colors"])
+    ...mapGetters(["colors"]),
+
+    tailwindVersion() {
+      const query = this.$route.query;
+      if (query.hasOwnProperty("tv")) {
+        return Number(query.tv);
+      }
+
+      // Version 1 by default
+      return 1;
+    }
   }
 };
 </script>
@@ -147,17 +141,33 @@ export default {
 
       <div class="relative mx-auto" style="max-width: 700px">
         <new-color class="pt-6 pb-4" @color:duplicated="notifyDuplicatedColor"></new-color>
-        <div
-          class="text-right text-xs"
-          :class="{
-                    'opacity-0': !colors.length,
-                    'text-link': colors.length
-                    }"
-          style="transition: opacity 0.4s;"
-        >
+        <div class="text-xs flex justify-between items-center" style="transition: opacity 0.4s;">
+          <span>
+            Tailwind Version:
+            <span
+              class="text-link"
+              :class="{
+                    'font-bold rounded-full px-2 py-1 bg-blue text-white hover:text-white hover:bg-blue-dark': tailwindVersion === 1,
+                    'text-grey': tailwindVersion !== 1
+                }"
+              @click="setTailwindVersion(1)"
+            >1.x</span> /
+            <span
+              class="text-link"
+              :class="{
+                    'font-bold rounded-full px-2 py-1 bg-blue text-white hover:text-white hover:bg-blue-dark': tailwindVersion === 0,
+                    'text-grey': tailwindVersion !== 0
+                }"
+              @click="setTailwindVersion(0)"
+            >0.x</span>
+          </span>
+
           <span
             v-show="inClipboard !== 'all'"
-            :class="{'pointer-events-none': !colors.length}"
+            :class="{
+                'pointer-events-none opacity-0': !colors.length,
+                'text-link': colors.length
+            }"
             @click="copyAllCodes()"
           >
             <i class="far fa-copy"></i> Copy all generated codes
@@ -173,15 +183,16 @@ export default {
       </div>
     </div>
 
+    <!-- Palettes codes used for the `copy all` button -->
     <div class="palettes-codes opacity-0 absolute" style="z-index: -1">
       <ul class="list-reset italic text-grey p-4" v-for="palette in colors" :key="palette.name">
-        <li class="pb-2">'{{ palette.name }}': {</li>
+        <li class="pb-2" v-if="tailwindVersion === 1">'{{ palette.name }}': {</li>
         <li
           class="pb-2"
           v-for="output in palette.output"
           :key="`${output.name}`"
         >{{ output.label }}: '{{ output.background.toUpperCase() }}',</li>
-        <li class="pb-2">},</li>
+        <li class="pb-2" v-if="tailwindVersion === 1">},</li>
       </ul>
     </div>
 
@@ -196,36 +207,18 @@ export default {
           :color="palette.color"
           :name="palette.name"
           :key="$index"
+          :version="tailwindVersion"
           @remove="removeColor($index)"
           @generate="setColorOutput($index, $event)"
           @color:duplicated="notifyDuplicatedColor"
           :class="{'duplicated': isDuplicated(palette)}"
         ></palette>
 
-        <div class="color-output mt-4">
-          <span class="label">Tailwind code:</span>
-          <span
-            :class="[
-                        'btn btn-blue btn-xs float-right -mt-1 cursor-pointer',
-                        inClipboard === palette.color ? 'btn-green' : ''
-                        ]"
-            @click="copyCode(palette)"
-          >
-            <span>
-              <i class="far fa-check-circle" v-show="inClipboard === palette.color"></i>
-              {{ inClipboard === palette.color ? 'copied' : 'copy to clipboard' }}
-            </span>
-          </span>
-          <ul :class="'list-reset italic text-grey p-4 palette-code hex' + palette.color">
-            <li class="pb-2">'{{ palette.name }}': {</li>
-            <li
-              class="pb-2"
-              v-for="output in palette.output"
-              :key="output.name"
-            >{{ output.label }}: '{{ output.background.toUpperCase() }}',</li>
-            <li class="pb-2">},</li>
-          </ul>
-        </div>
+        <palette-code
+          :palette="palette"
+          :version="tailwindVersion"
+          @copy="inClipboard = code.color"
+        ></palette-code>
       </div>
     </div>
 

@@ -9,11 +9,15 @@ export default {
             newColor: {},
             isErrorVisible: false,
             errorMessage: '',
+            tailwindVersion: 1
         }
     },
 
     mounted() {
         this.reset();
+        if (this.$route.query && this.$route.query.tv !== undefined) {
+            this.tailwindVersion = this.$route.query.tv;
+        }
     },
 
     methods: {
@@ -26,7 +30,7 @@ export default {
             this.$refs.colorName.focus();
         },
 
-        addColor() {
+        addColor(e) {
             const isColorAlreadyAdded = this.colors.findIndex(c => {
                 return (
                     c.name.toLowerCase() === this.newColor.name.toLowerCase() ||
@@ -57,6 +61,10 @@ export default {
             // Now the query string
             const query = {};
             this.colors.forEach(i => { query[i.name] = i.color });
+
+            // Store the Tailwind version too
+            query.tv = this.tailwindVersion;
+
             this.$router.push({ path: '/', query });
         },
 
