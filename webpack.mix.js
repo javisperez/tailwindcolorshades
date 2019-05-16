@@ -61,7 +61,7 @@ mix
 
     .options({
         processCssUrls: false,
-        postCss: [ tailwindcss('./tailwind.js') ],
+        postCss: [ tailwindcss('./tailwind.config.js') ],
     })
 
     .browserSync({

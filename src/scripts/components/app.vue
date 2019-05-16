@@ -136,7 +136,7 @@ export default {
       <div class="logo">
         <img src="images/logo.png" width="80" alt="Color shades for Tailwind CSS">
       </div>
-      <h1 class="font-normal pt-0 pb-4">
+      <h1 class="font-normal pt-0 pb-4 text-3xl">
         Color Shades Generator
         <div class="font-light" style="font-size: 75%;">for Tailwind CSS</div>
       </h1>
@@ -187,7 +187,7 @@ export default {
 
     <!-- Palettes codes used for the `copy all` button -->
     <div class="palettes-codes opacity-0 absolute" style="z-index: -1">
-      <ul class="list-reset italic text-grey p-4" v-for="palette in colors" :key="palette.name">
+      <ul class="italic text-grey p-4" v-for="palette in colors" :key="palette.name">
         <li class="pb-2" v-if="tailwindVersion === 1">'{{ palette.name }}': {</li>
         <li
           class="pb-2"

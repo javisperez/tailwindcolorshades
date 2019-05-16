@@ -221,12 +221,12 @@ export default {
     <transition name="error-msg">
       <div
         v-if="isErrorVisible"
-        class="absolute container pin-t flex items-center bg-red text-white text-sm font-bold px-4 py-3"
+        class="absolute container top-0 flex items-center bg-red text-white text-sm font-bold px-4 py-3"
         style="left: 50%; transform: translateX(-50%);"
         role="alert"
       >
         <svg
-          class="fill-current w-4 h-4 mr-2"
+          class="fill-current w-4 text-3xl mr-2"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
         >

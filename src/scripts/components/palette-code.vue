@@ -62,7 +62,7 @@ export default {
         {{ inClipboard === palette.color ? 'copied' : 'copy to clipboard' }}
       </span>
     </span>
-    <ul :class="'list-reset italic text-grey p-4 palette-code hex' + palette.color">
+    <ul :class="`italic text-grey p-4 palette-code hex${palette.color}`">
       <li class="pb-2" v-if="version === 1">'{{ palette.name }}': {</li>
       <li
         class="pb-2"

@@ -236,7 +236,7 @@ export default {
     <span class="close float-right m-4 cursor-pointer" @click="remove()">
       <i class="far fa-trash-alt text-white"></i>
     </span>
-    <ul class="list-reset">
+    <ul>
       <li
         :style="{
                     backgroundColor: '#'+color,

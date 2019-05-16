@@ -1,17 +1,5 @@
-    /**
-    * This injects Tailwind's base styles, which is a combination of
-    * Normalize.css and some additional base styles.
-    *
-    * You can see the styles here:
-    * https://github.com/tailwindcss/tailwindcss/blob/master/css/preflight.css
-    *
-    * If using `postcss-import`, you should import this line from it's own file:
-    *
-    * @import "./tailwind-preflight.css";
-    *
-    * See: https://github.com/tailwindcss/tailwindcss/issues/53#issuecomment-341413622
-    */
-    @tailwind preflight;
+
+    @tailwind base;
 
     /**
     * Here you would add any of your custom component classes; stuff that you'd
@@ -42,6 +30,10 @@
     html,
     body {
         font-family: Helvetica, sans-serif;
+    }
+
+    img {
+        @apply .inline;
     }
 
     /**

@@ -5,7 +5,9 @@
     "watch": "NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
     "hot": "NODE_ENV=development webpack-dev-server --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
     "production": "NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "test": "NODE_ENV=test karma start --config=karma.conf.js --single-run"
+    "test": "NODE_ENV=test karma start --config=karma.conf.js --single-run",
+    "serve": "npm run watch",
+    "build": "npm run production"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free-webfonts": "^1.0.2",
@@ -37,6 +39,6 @@
     "karma-phantomjs-launcher": "^1.0.4",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.9",
-    "tailwindcss": "^0.4.0"
+    "tailwindcss": "^1.0.1"
   }
 }
