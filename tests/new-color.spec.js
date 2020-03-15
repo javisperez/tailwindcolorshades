@@ -24,7 +24,7 @@ newColor.store = store;
 
 describe('src/scripts/new-color.vue', () => {
     // Create the component instance
-    let component = new Vue(newColor);
+    const component = new Vue(newColor);
 
     it('should validate required fields', () => {
         // Mount the component

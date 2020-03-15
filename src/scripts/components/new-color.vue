@@ -32,10 +32,32 @@ export default {
     },
 
     addColor(e) {
+      // We need the color to be able to generate a name (if none provided)
+      if (!this.newColor.color) {
+        this.$gaTrack(
+          "errors",
+          "color:generation",
+          `Empty value for color (${this.newColor.name}:${this.newColor.color})`
+        );
+        this.isErrorVisible = true;
+        return;
+      }
+
+      // if color is invalid, log the error and ignore that color
+      if (!this.validateColor(this.newColor.color)) {
+        this.$gaTrack(
+          "errors",
+          "color:generation",
+          `Invalid color ${this.newColor.color}`
+        );
+        this.isErrorVisible = true;
+        this.errorMessage = "That color code is not valid";
+        return;
+      }
+
       // If no name was provided, use a matching name from the color-namer library
       if (!this.newColor.name) {
         this.newColor.name = colorNamer(`#${this.newColor.color}`.replace('##', '#')).ntc[0].name
-        console.log('no name', this.newColor.name)
         this.$gaTrack(
           "colors",
           "color:generation",
@@ -49,29 +71,9 @@ export default {
             c.name.toLowerCase() === this.newColor.name.toLowerCase() ||
             c.color.toLowerCase() === this.newColor.color.toLowerCase()
         )) > -1;
-      const isColorValid = this.validateColor(this.newColor.color);
 
       if (isColorAlreadyAdded) {
         this.$emit("color:duplicated", this.newColor);
-        return;
-      }
-
-      if (!this.newColor.color) {
-        this.$gaTrack(
-          "errors",
-          "color:generation",
-          `Empty value for color (${this.newColor.name}:${this.newColor.color})`
-        );
-        this.isErrorVisible = true;
-        return;
-      }
-
-      if (!isColorValid) {
-        this.$gaTrack(
-          "errors",
-          "color:generation",
-          `Invalid color ${this.newColor.color}`
-        );
         return;
       }
 
