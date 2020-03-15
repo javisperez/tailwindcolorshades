@@ -1,4 +1,6 @@
 <script>
+import { sanitizeColorName } from '../support/utils'
+
 export default {
   name: "palette",
 
@@ -12,7 +14,7 @@ export default {
   },
 
   created() {
-    this.colorName = this.name;
+    this.colorName = sanitizeColorName(this.name);
   },
 
   filters: {
@@ -122,8 +124,9 @@ export default {
       // Reset the colors
       this.colors = [];
 
-      const isVersion1 = this.version === 1,
-        name = this.colorName.replace(/\s/gi, "-");
+      const isVersion1 = this.version === 1;
+      const name = sanitizeColorName(this.colorName);
+      const label = isVersion1 ? "500" : `'${name}'`;
 
       // Tints
       for (const key in this.tints) {
@@ -138,8 +141,6 @@ export default {
           text: this.getTextColor(tinted)
         });
       }
-
-      const label = isVersion1 ? "500" : `'${name}'`;
 
       // Base
       this.colors.push({
@@ -163,7 +164,7 @@ export default {
         });
       }
 
-      this.$track("colors", "generated", `${this.name}:${this.color}`);
+      this.$gaTrack("colors", "generated", `${this.name}:${this.color}`);
 
       // Notify our parent that we're done
       this.$emit("generate", this.colors);
@@ -175,14 +176,16 @@ export default {
         return;
       }
 
+      const sanitizedNewName = sanitizeColorName(this.newName)
+
       const isColorAlreadyAdded =
         this.allColors.findIndex(
-          c => c.name.toLowerCase() === this.newName.toLowerCase()
+          c => c.name.toLowerCase() === sanitizedNewName.toLowerCase()
         ) > -1;
 
       if (isColorAlreadyAdded) {
         this.$emit("color:duplicated", {
-          name: this.newName,
+          name: sanitizedNewName,
           color: this.color
         });
         return;
@@ -190,10 +193,10 @@ export default {
 
       this.$store.commit("RENAME_COLOR", {
         currentName: this.colorName,
-        newName: this.newName
+        newName: sanitizedNewName
       });
-      this.$track("colors", "renamed", `${this.colorName} to ${this.newName}`);
-      this.colorName = this.newName;
+      this.$gaTrack("colors", "renamed", `${this.colorName} to ${sanitizedNewName}`);
+      this.colorName = sanitizedNewName;
       this.generate();
       this.isRenaming = false;
     }
@@ -203,7 +206,7 @@ export default {
     isRenaming(value) {
       if (!value) return;
 
-      this.newName = this.colorName;
+      this.newName = sanitizeColorName(this.colorName);
 
       this.$nextTick(_ => {
         this.$refs.newName.focus();
@@ -239,9 +242,9 @@ export default {
     <ul>
       <li
         :style="{
-                    backgroundColor: '#'+color,
-                    color: text
-                }"
+            backgroundColor: '#'+color,
+            color: text
+        }"
       >
         <div
           v-if="!isRenaming"

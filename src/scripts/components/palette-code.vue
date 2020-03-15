@@ -37,7 +37,7 @@ export default {
 
       this.$emit("copied", code.color);
 
-      this.$track("code", "copied", `${code.name}:${code.color}`);
+      this.$gaTrack("code", "copied", `${code.name}:${code.color}`);
 
       setTimeout(() => {
         this.inClipboard = null;

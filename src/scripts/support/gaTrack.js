@@ -1,6 +1,6 @@
 export default {
     install(Vue) {
-        Vue.prototype.$track = (category, action, label = '', options = { non_interaction: true }) => {
+        Vue.prototype.$gaTrack = (category, action, label = '', options = { non_interaction: true }) => {
             if (typeof gtag === 'undefined') {
                 return;
             }

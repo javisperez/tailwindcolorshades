@@ -3,6 +3,7 @@ import { mapGetters } from "vuex";
 import newColor from "./new-color.vue";
 import palette from "./palette.vue";
 import paletteCode from "./palette-code.vue";
+import { sanitizeColorName } from '../support/utils'
 
 export default {
   name: "app",
@@ -22,7 +23,7 @@ export default {
 
   mounted() {
     if (this.$route.query) {
-      this.$track("colors", "from-url", window.location.search.substring(1));
+      this.$gaTrack("colors", "from-url", window.location.search.substring(1));
       this.setColors();
     }
   },
@@ -34,14 +35,15 @@ export default {
 
       for (const name in query) {
         const color = `#${query[name]}`;
-        if (color.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
-          this.$store.commit("ADD_COLOR", { name, color });
+        const sanitizedName = sanitizeColorName(name)
+        if (color.match(/^#([A-f0-9]{6}|[A-f0-9]{3})$/)) {
+          this.$store.commit("ADD_COLOR", { name: sanitizedName, color });
         }
       }
     },
 
     removeColor(index) {
-      this.$track(
+      this.$gaTrack(
         "colors",
         "removed",
         `${this.colors[index].name}:${this.colors[index].color}`
@@ -49,8 +51,8 @@ export default {
       this.$store.commit("REMOVE_COLOR", { index });
     },
 
-    setColorOutput(index, e) {
-      this.$store.commit("SET_COLOR_OUTPUT", { index, output: e });
+    setColorOutput(index, output) {
+      this.$store.commit("SET_COLOR_OUTPUT", { index, output });
     },
 
     notifyDuplicatedColor(color) {
@@ -60,7 +62,7 @@ export default {
 
       this.duplicatedColor = color;
 
-      this.$track("errors", "color:duplicated", `${color.name}:${color.color}`);
+      this.$gaTrack("errors", "color:duplicated", `${color.name}:${color.color}`);
 
       setTimeout(() => {
         this.duplicatedColor = null;
@@ -99,7 +101,7 @@ export default {
 
       this.inClipboard = "all";
 
-      this.$track("code", "copied:all", "Copied all code");
+      this.$gaTrack("code", "copied:all", "Copied all code");
 
       setTimeout(() => {
         this.inClipboard = null;
@@ -187,14 +189,13 @@ export default {
 
     <!-- Palettes codes used for the `copy all` button -->
     <div class="palettes-codes opacity-0 absolute" style="z-index: -1">
-      <ul class="italic text-grey p-4" v-for="palette in colors" :key="palette.name">
-        <li class="pb-2" v-if="tailwindVersion === 1">'{{ palette.name }}': {</li>
+      <ul class="italic text-grey" v-for="palette in colors" :key="palette.name">
+        <li v-if="tailwindVersion === 1">'{{ palette.name }}': {</li>
         <li
-          class="pb-2"
           v-for="output in palette.output"
           :key="`${output.name}`"
         >{{ output.label }}: '{{ output.background.toUpperCase() }}',</li>
-        <li class="pb-2" v-if="tailwindVersion === 1">},</li>
+        <li v-if="tailwindVersion === 1">},</li>
       </ul>
     </div>
 

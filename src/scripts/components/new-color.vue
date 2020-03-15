@@ -1,5 +1,6 @@
 <script>
 import { mapGetters } from "vuex";
+import colorNamer from "color-namer";
 
 export default {
   name: "new-color",
@@ -27,17 +28,27 @@ export default {
         color: ""
       };
 
-      this.$refs.colorName.focus();
+      this.$refs.colorCode.focus();
     },
 
     addColor(e) {
+      // If no name was provided, use a matching name from the color-namer library
+      if (!this.newColor.name) {
+        this.newColor.name = colorNamer(`#${this.newColor.color}`.replace('##', '#')).ntc[0].name
+        console.log('no name', this.newColor.name)
+        this.$gaTrack(
+          "colors",
+          "color:generation",
+          `No name provided for color: ${
+          this.newColor.color}). Using the automated name: ${this.newColor.name}`
+        );
+      }
+
       const isColorAlreadyAdded =
-        this.colors.findIndex(c => {
-          return (
+        this.colors.findIndex(c => (
             c.name.toLowerCase() === this.newColor.name.toLowerCase() ||
             c.color.toLowerCase() === this.newColor.color.toLowerCase()
-          );
-        }) > -1;
+        )) > -1;
       const isColorValid = this.validateColor(this.newColor.color);
 
       if (isColorAlreadyAdded) {
@@ -45,20 +56,18 @@ export default {
         return;
       }
 
-      if (!this.newColor.name || !this.newColor.color) {
-        this.$track(
+      if (!this.newColor.color) {
+        this.$gaTrack(
           "errors",
           "color:generation",
-          `Empty value name or color (${this.newColor.name}:${
-            this.newColor.color
-          })`
+          `Empty value for color (${this.newColor.name}:${this.newColor.color})`
         );
         this.isErrorVisible = true;
         return;
       }
 
       if (!isColorValid) {
-        this.$track(
+        this.$gaTrack(
           "errors",
           "color:generation",
           `Invalid color ${this.newColor.color}`
@@ -136,7 +145,7 @@ export default {
         return false;
       }
 
-      return /^(#{1})?[0-9A-F]{6}$/i.test(color);
+      return /^#?[0-9A-F]{6}$/i.test(color);
     },
 
     validatePaste(e) {
@@ -157,10 +166,7 @@ export default {
     ...mapGetters(["colors"]),
 
     isDisabled() {
-      return (
-        !this.newColor.name ||
-        (!this.validateColor(this.newColor.color) && this.newColor.color)
-      );
+      return !this.validateColor(this.newColor.color) && this.newColor.color;
     }
   },
 
@@ -169,7 +175,7 @@ export default {
       immediate: true,
       handler(v) {
         if (v === false) {
-          this.errorMessage = "Sorry but both fields are required";
+          this.errorMessage = "Color code is required";
         }
       }
     }
@@ -180,22 +186,6 @@ export default {
 <template>
   <div class="new-color">
     <form @submit.prevent="addColor" class="flex flex-wrap justify-around flex-1 mx-auto">
-      <div class="mr-2 flex flex-col flex-1">
-        <label class="block text-left font-bold">
-          Color name
-          <span class="text-red">*</span>
-        </label>
-        <input
-          type="text"
-          class="input orange bg-grey-lighter"
-          v-model="newColor.name"
-          placeholder="eg. papaya"
-          @keydown="validateNameInput"
-          @input="isErrorVisible = null"
-          ref="colorName"
-        >
-      </div>
-
       <div class="mr-2 flex flex-col flex-1">
         <label class="block text-left font-bold">
           Hex code
@@ -209,6 +199,21 @@ export default {
           @keydown="validateColorInput"
           maxlength="7"
           @paste="validatePaste"
+          @input="isErrorVisible = null"
+          ref="colorCode"
+        >
+      </div>
+
+      <div class="mr-2 flex flex-col flex-1">
+        <label class="block text-left font-bold">
+          Color name
+        </label>
+        <input
+          type="text"
+          class="input orange bg-grey-lighter"
+          v-model="newColor.name"
+          placeholder="eg. valencia"
+          @keydown="validateNameInput"
           @input="isErrorVisible = null"
         >
       </div>
