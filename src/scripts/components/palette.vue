@@ -33,6 +33,7 @@ export default {
 
       tintsPerVersion: {
         1: {
+          50: 0.95,
           100: 0.9,
           200: 0.75,
           300: 0.6,
