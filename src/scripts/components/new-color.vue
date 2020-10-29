@@ -169,6 +169,20 @@ export default {
 
     isDisabled() {
       return !this.validateColor(this.newColor.color) && this.newColor.color;
+    },
+
+    newColorInHex() {
+      if (!this.newColor.color) {
+        return null;
+      }
+
+      // We dont care about validating the color code to be valid
+      // because the responsable method should take care of that
+      if (this.newColor.color.includes('#')) {
+        return this.newColor.color;
+      }
+
+      return `#${this.newColor.color}`;
     }
   },
 
@@ -194,19 +208,25 @@ export default {
           <span class="text-red">*</span>
         </label>
 
-        <div class="flex">
-        <input
-          type="text"
-          class="mr-1 input orange bg-grey-lighter"
-          v-model="newColor.color"
-          placeholder="eg. #E24E42"
-          @keydown="validateColorInput"
-          maxlength="7"
-          @paste="validatePaste"
-          @input="isErrorVisible = null"
-          ref="colorCode"
-        > 
-        <input title="Pick a color" type="color" class="w-10 h-10 overflow-hidden rounded cursor-pointer" v-model="newColor.color">
+        <div class="orange flex input relative bg-grey-lighter p-0 items-center">
+          <input
+            type="text"
+            v-model="newColor.color"
+            class="input bg-grey-lighter pr-12 w-full"
+            placeholder="eg. #E24E42"
+            @keydown="validateColorInput"
+            maxlength="7"
+            @paste="validatePaste"
+            @input="isErrorVisible = null"
+            ref="colorCode"
+          >
+          <input
+            title="Pick a color"
+            type="color"
+            class="w-6 h-6 overflow-hidden rounded cursor-pointer absolute right-0 mr-2"
+            :value="newColorInHex"
+            @input="newColor.color = $event.target.value"
+          >
         </div>
       </div>
 
