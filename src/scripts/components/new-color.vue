@@ -188,14 +188,16 @@ export default {
 <template>
   <div class="new-color">
     <form @submit.prevent="addColor" class="flex flex-wrap justify-around flex-1 mx-auto">
-      <div class="mr-2 flex flex-col flex-1">
-        <label class="block text-left font-bold">
+      <div class="flex flex-col flex-1 mr-2">
+        <label class="block font-bold text-left">
           Hex code
           <span class="text-red">*</span>
         </label>
+
+        <div class="flex">
         <input
           type="text"
-          class="input orange bg-grey-lighter"
+          class="mr-1 input orange bg-grey-lighter"
           v-model="newColor.color"
           placeholder="eg. #E24E42"
           @keydown="validateColorInput"
@@ -203,11 +205,13 @@ export default {
           @paste="validatePaste"
           @input="isErrorVisible = null"
           ref="colorCode"
-        >
+        > 
+        <input title="Pick a color" type="color" class="w-10 h-10 overflow-hidden rounded cursor-pointer" v-model="newColor.color">
+        </div>
       </div>
 
-      <div class="mr-2 flex flex-col flex-1">
-        <label class="block text-left font-bold">
+      <div class="flex flex-col flex-1 mr-2">
+        <label class="block font-bold text-left">
           Color name
         </label>
         <input
@@ -228,12 +232,12 @@ export default {
     <transition name="error-msg">
       <div
         v-if="isErrorVisible"
-        class="absolute container top-0 flex items-center bg-red text-white text-sm font-bold px-4 py-3"
+        class="container absolute top-0 flex items-center px-4 py-3 text-sm font-bold text-white bg-red"
         style="left: 50%; transform: translateX(-50%);"
         role="alert"
       >
         <svg
-          class="fill-current w-4 text-3xl mr-2"
+          class="w-4 mr-2 text-3xl fill-current"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
         >
