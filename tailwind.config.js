@@ -3,6 +3,10 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
+      fontFamily: {
+        handwritten: ["Amatic SC"]
+      },
+
       maxWidth: {
         "24": "6rem"
       },

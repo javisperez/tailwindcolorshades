@@ -4,11 +4,13 @@ import trackAnalytics from "../composables/analytics";
 import useColors, { Palette } from "../composables/colors";
 import ColorsPalette from "../components/Palette.vue";
 import InputColor from "../components/InputColor.vue";
+import EmptyHome from "../components/EmptyHome.vue";
 
 export default defineComponent({
   components: {
     ColorsPalette,
-    InputColor
+    InputColor,
+    EmptyHome
   },
 
   data() {
@@ -233,7 +235,8 @@ export default defineComponent({
   </header>
 
   <main class="mt-40">
-    <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 ">
+    <EmptyHome v-if="!palettes.length" />
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8" v-else>
       <!-- Shades top row -->
       <transition
         enter-active-class="transition-opacity"

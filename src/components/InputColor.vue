@@ -98,7 +98,7 @@ export default defineComponent({
 <template>
   <div class="w-full sm:max-w-xs flex">
     <label for="color-code" class="sr-only">Color Hex Code</label>
-    <div class="relative rounded-md shadow-sm">
+    <div class="relative rounded-md shadow-sm w-full md:w-auto">
       <!-- Color sample -->
       <span
         class="inline-block h-4 w-4 rounded-full absolute left-0 ml-3 top-1/2 transform -translate-y-1/2 items-center border"

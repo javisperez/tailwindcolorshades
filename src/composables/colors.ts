@@ -80,7 +80,7 @@ function darken(hex: string, intensity: number): string {
   return rgbToHex(r, g, b);
 }
 
-function getColorName(color: string): string {
+export function getColorName(color: string): string {
   const { name } = colorNamer(`#${color}`.replace("##", "#")).ntc[0];
   const sanitizedName = name
     .replace(/['/]/gi, "")
