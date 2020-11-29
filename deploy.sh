@@ -5,7 +5,7 @@
 pwd
 
 remote=$(git config remote.origin.url)
-ga=$(cat ga | sed s/'$GA_TRACKING_ID'/"$GA_TRACKING_ID"/g)
+ga=$(cat .ga | sed s/'$GA_TRACKING_ID'/"$GA_TRACKING_ID"/g)
 
 # make a directory to put the gp-pages branch
 mkdir gh-pages-branch
@@ -31,7 +31,7 @@ mv tmp.html index.html
 # stage any changes and new files
 git add -A
 # now commit, ignoring branch gh-pages doesn't seem to work, so trying skip
-git commit -m "Deploy to GitHub pages [ci skip]"
+git commit -m "Deploy to GitHub pages"
 # and push, but send any output to /dev/null to hide anything sensitive
 git push --force --quiet origin gh-pages
 
