@@ -1,36 +1,19 @@
-# tailwindcolorshades
+# Color shades generators for TailwindCSS
 
-## Project setup
-```
-npm install
-```
+[![CircleCI branch](https://img.shields.io/circleci/project/github/javisperez/tailwindcolorshades/master.svg)](https://circleci.com/gh/javisperez/tailwindcolorshades/tree/master)
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## To use this app
+Go to [https://javisperez.github.io/tailwindcolorshades](https://javisperez.github.io/tailwindcolorshades)
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## What is this?
+Is a tool to make shades and tints for a given color and generate the proper code for the **TailwindCSS** config file.
 
-### Lints and fixes files
-```
-npm run lint
-```
+The idea is to make the custom color generation a bit easier when creating custom color variants to use in your app's CSS.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## How to use it
+Just place a name and a color on the inputs and will generate 5 tints (50, 100, 200, 300, 400) and 4 shades (600, 700, 800, 900) for that given color. An automatic name generation will be used for the css class names but you can rename them at anytime.
 
-### TODO
-- [x] Generate source for single palette
-- [x] Dont depend on the prop when renaming, to avoid triggering the transition
-- [x] Generate source for all palettes
-- [~] View source
-- [x] Copy source
-- [x] Select / unselect source
-- [] Validate input
-- [] Gradient tool
-- [] Add URL params
-- [] Make it responsive
+After that you can copy/paste the generated colors into your Tailwind config file and start using them in your css.
+
+## Contributions
+Feel free to fork this repo and send any Pull Request you want, every help is very much welcome :)
