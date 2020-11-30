@@ -1,19 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "389b48dc1bcd8b47b67b",
-    "url": "/tailwindcolorshades/css/app.1aab2b95.css"
+    "revision": "a604329a89f5e64b3354",
+    "url": "/tailwindcolorshades/css/app.358931dd.css"
+  },
+  {
+    "revision": "e9a42e339f93a719c17be53c386dbbfb",
+    "url": "/tailwindcolorshades/fonts/AmaticSC-Regular.e9a42e33.ttf"
   },
   {
     "revision": "f07db7b24e49448f2ee19a0903e92ac8",
     "url": "/tailwindcolorshades/img/logo.f07db7b2.png"
   },
   {
-    "revision": "2560a748b54f1bc364aef03ce3062998",
+    "revision": "8eb9659935624a336953456b0bf7fa18",
     "url": "/tailwindcolorshades/index.html"
   },
   {
-    "revision": "389b48dc1bcd8b47b67b",
-    "url": "/tailwindcolorshades/js/app.1f1ed3f9.js"
+    "revision": "a604329a89f5e64b3354",
+    "url": "/tailwindcolorshades/js/app.53edcb24.js"
   },
   {
     "revision": "80f5b98a08bd02518244",
