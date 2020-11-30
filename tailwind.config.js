@@ -4,7 +4,11 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        handwritten: ["Amatic SC"]
+        handwritten: ["Amatic SC", "sans-serif"]
+      },
+
+      scale: {
+        flip: "-1"
       },
 
       maxWidth: {

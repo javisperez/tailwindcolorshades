@@ -3,3 +3,12 @@
 @tailwind components;
 
 @tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: Amatic SC;
+    font-weight: 400;
+    font-style: normal;
+    src: local('Amatic SC'), url(../fonts/AmaticSC-Regular.ttf);
+  }
+}

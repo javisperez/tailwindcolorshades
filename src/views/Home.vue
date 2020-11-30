@@ -234,7 +234,7 @@ export default defineComponent({
     </div>
   </header>
 
-  <main class="mt-40">
+  <main class="md:mt-32 mt-52 relative">
     <EmptyHome v-if="!palettes.length" />
     <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8" v-else>
       <!-- Shades top row -->

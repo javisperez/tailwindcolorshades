@@ -29,7 +29,7 @@ export default defineComponent({
 
 <template>
   <span
-    class="absolute left-1/2 mt-40 md:mt-28 top-0 transform -translate-x-40"
+    class="-top-6 -translate-x-32 absolute left-1/2 md:scale-x-100 scale-x-flip transform"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -54,11 +54,11 @@ export default defineComponent({
     </svg>
   </span>
   <div
-    class="flex items-center justify-center text-gray-600 text-3xl font-handwritten pt-6 mt-52 md:mt-0"
+    class="flex flex-col md:flex-row items-center justify-center text-gray-600 text-3xl font-handwritten pt-20 mt-52 md:mt-0"
   >
     Start here. Try something like
     <span
-      class="px-2 text-yellow-600 hover:underline cursor-pointer hover:text-yellow-700"
+      class="px-2 text-yellow-400 hover:underline cursor-pointer hover:text-yellow-600"
       @click="onColorClick"
       >#{{ randomColor }}</span
     >
