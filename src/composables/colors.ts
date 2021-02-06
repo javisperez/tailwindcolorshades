@@ -84,7 +84,7 @@ export function getColorName(color: string): string {
   const { name } = colorNamer(`#${color}`.replace("##", "#")).ntc[0];
   const sanitizedName = name
     .replace(/['/]/gi, "")
-    .replace(/\s+/, "-")
+    .replace(/\s+/g, "-")
     .toLowerCase();
 
   return sanitizedName;

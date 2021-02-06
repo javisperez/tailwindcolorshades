@@ -9,7 +9,8 @@ export default defineComponent({
 
   data() {
     return {
-      color: ""
+      color: "",
+      isMac: /Mac|iPod|iPhone|iPad/.test(navigator.platform)
     };
   },
 
@@ -30,6 +31,17 @@ export default defineComponent({
 
       return color;
     }
+  },
+
+  mounted() {
+    document.addEventListener("keydown", e => {
+      const isCmd = this.isMac ? e.metaKey : e.ctrlKey;
+
+      if (isCmd && e.key === "k") {
+        e.preventDefault();
+        (this.$refs.inputColor as HTMLInputElement).focus();
+      }
+    });
   },
 
   methods: {
@@ -90,6 +102,15 @@ export default defineComponent({
       this.$nextTick(() => {
         this.color = this.cleanUpColorValue(pastingText || "");
       });
+    },
+
+    handleKeydown(e: KeyboardEvent) {
+      const isCmd = this.isMac ? e.metaKey : e.ctrlKey;
+
+      if (isCmd && e.key === "ArrowDown") {
+        e.preventDefault();
+        (this.$refs.inputColorPicker as HTMLInputElement).click();
+      }
     }
   }
 });
@@ -111,13 +132,15 @@ export default defineComponent({
         v-model="color"
         type="text"
         class="focus:ring-primary-500 focus:border-primary-500 block w-full px-10 tracking-wide sm:text-sm border-gray-300 rounded-md"
-        placeholder="Color hex code"
+        :placeholder="`Color hex code (${isMac ? '⌘' : 'Ctrl+'}K)`"
         maxlength="7"
+        ref="inputColor"
         @input="addPrefixValue"
         @blur="clearValue"
         @focus="addPrefixValue"
         @paste="cleanUpClipboardValue"
         @keyup.enter="generate(newColorInHex)"
+        @keydown="handleKeydown"
       />
 
       <!-- Eye dropper -->
@@ -144,6 +167,7 @@ export default defineComponent({
           type="color"
           :value="newColorInHex"
           @input="updateInputColorValue"
+          ref="inputColorPicker"
           class="opacity-0 w-full h-full inline-block absolute top-0 left-0"
         />
       </span>

@@ -31,6 +31,27 @@ export default defineComponent({
     };
   },
 
+  watch: {
+    isEditing(isEditing, wasEditing) {
+      // When done editting, if the name changes we need to update the url
+      if (wasEditing && !isEditing) {
+        const query = this.$route.query;
+        const newQuery = {
+          ...query,
+          [this.colorName]: query[this.name]
+        };
+
+        // Remove the old color name from the querystring
+        delete newQuery[this.name];
+
+        this.$router.push({
+          path: "/",
+          query: newQuery
+        });
+      }
+    }
+  },
+
   computed: {
     // Everything runs around the 500 color
     baseColor(): string {
