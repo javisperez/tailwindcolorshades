@@ -1,7 +1,7 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "a604329a89f5e64b3354",
-    "url": "/tailwindcolorshades/css/app.358931dd.css"
+    "revision": "92eaa115fb58dc41b300",
+    "url": "/tailwindcolorshades/css/app.3304a0bd.css"
   },
   {
     "revision": "e9a42e339f93a719c17be53c386dbbfb",
@@ -12,12 +12,12 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/tailwindcolorshades/img/logo.f07db7b2.png"
   },
   {
-    "revision": "8eb9659935624a336953456b0bf7fa18",
+    "revision": "8560236285d9ef39ea17a923d658dac2",
     "url": "/tailwindcolorshades/index.html"
   },
   {
-    "revision": "a604329a89f5e64b3354",
-    "url": "/tailwindcolorshades/js/app.53edcb24.js"
+    "revision": "92eaa115fb58dc41b300",
+    "url": "/tailwindcolorshades/js/app.888fea90.js"
   },
   {
     "revision": "80f5b98a08bd02518244",

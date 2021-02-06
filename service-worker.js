@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/tailwindcolorshades/precache-manifest.bdcafa877c6e6d3ad956f50f61e11a22.js"
+  "/tailwindcolorshades/precache-manifest.4a990a22f1451193762b934883894624.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "tailwindcolorshades"});
