@@ -2,7 +2,7 @@ version: 2
 jobs:
   setup:
     docker:
-      - image: znck/pnpm:latest
+      - image: guergeiro/pnpm:18-8
     steps:
       - checkout
       - run:
@@ -21,7 +21,7 @@ jobs:
           - node_modules
   build:
     docker:
-      - image: znck/pnpm:latest
+      - image: guergeiro/pnpm:18-8
     steps:
       - checkout
       - restore_cache:
@@ -40,7 +40,7 @@ jobs:
           destination: dist
   test:
     docker:
-      - image: znck/pnpm:latest
+      - image: guergeiro/pnpm:18-8
     steps:
       - checkout
       - restore_cache:
@@ -50,7 +50,7 @@ jobs:
           command: pnpm test:unit
   deploy:
     docker:
-      - image: znck/pnpm:latest
+      - image: guergeiro/pnpm:18-8
     steps:
       - checkout
       - restore_cache:
