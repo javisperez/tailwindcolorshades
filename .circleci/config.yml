@@ -1,68 +1,81 @@
 version: 2
 jobs:
-    build:
-        docker:
-            - image: circleci/node:12.0.0-browsers
-        steps:
-            - checkout
-            - run:
-                name: Versions
-                command: |
-                    node --version
-                    npm --version
-                    yarn --version
+  setup:
+    docker:
+      - image: znck/pnpm:latest
+    steps:
+      - checkout
+        - run:
+          name: Versions
+            command: |
+              node --version
+              pnpm --version
             - restore_cache:
-                key: dependency-cache-{{ checksum "package.json" }}
+                key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
             - run:
-                name: rebuild node-sass
-                command: npm rebuild node-sass
-            - run:
-                name: Install npm dependencies
-                command: 'npm install'
-            - run:
-                name: Running production build
-                command: 'npm run build'
-            - persist_to_workspace:
-                root: .
-                paths: .
-    deploy:
-        docker:
-            - image: circleci/node:12.0.0-browsers
-        steps:
-            - checkout
-            - run:
-                name: Versions
-                command: |
-                    node --version
-                    npm --version
-                    yarn --version
-            - restore_cache:
-                key: dependency-cache-{{ checksum "package.json" }}
-            - run:
-                name: rebuild node-sass
-                command: npm rebuild node-sass
-            - run:
-                name: Install npm dependencies
-                command: 'npm install'
-            - run:
-                name: Build
-                command: 'npm run build'
-            - deploy:
-                name: Deploy gh-pages to Github Pages
-                command: './deploy.sh dist'
+                name: Install
+                command: pnpm install --frozen-lockfile
+            - save_cache:
+                key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+                paths:
+                - node_modules
+  build:
+    docker:
+      - image: znck/pnpm:latest
+      steps:
+        - checkout
+          - restore_cache:
+              key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+          - run:
+              name: Build
+              command: |
+                pnpm run build
+                ls dist
+          - save_cache:
+              key: build-output-{{ .Environment.CIRCLE_SHA1 }}
+              paths:
+          - dist
+            - store_artifacts:
+                path: dist
+                destination: dist
+  test:
+    docker:
+      - image: znck/pnpm:latest
+      steps:
+        - checkout
+        - restore_cache:
+            key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+        - run:
+            name: Test
+            command: pnpm test
+  deploy:
+    docker:
+      - image: znck/pnpm:latest
+      steps:
+        - checkout
+        - restore_cache:
+            key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+        - deploy:
+            name: Deploy gh-pages to Github Pages
+            command: './deploy.sh dist'
 
 workflows:
-    version: 2
-    build-deploy:
-        jobs:
-        - build:
-            filters:
-                branches:
-                    ignore:
-                        - gh-pages
-        - deploy:
-            requires:
-                - build
-            filters:
-                branches:
-                    only: master
+  version: 2
+  build_and_deploy:
+    jobs:
+      - test:
+          requires:
+            - setup
+      - build:
+          requires:
+            - setup
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master

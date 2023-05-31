@@ -45,7 +45,7 @@ export default defineComponent({
   },
 
   methods: {
-    generate(color: string) {
+    generate(color?: string) {
       if (!this.isColorValid(color)) {
         return;
       }
@@ -54,7 +54,7 @@ export default defineComponent({
       this.color = "";
     },
 
-    isColorValid(color: string) {
+    isColorValid(color?: string) {
       if (!color) {
         return false;
       }

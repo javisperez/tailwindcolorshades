@@ -1,7 +1,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import trackAnalytics from "../composables/analytics";
-import useColors, { Palette } from "../composables/colors";
+import useColors from "../composables/colors";
+import type { Palette } from "../composables/colors"
 import ColorsPalette from "../components/Palette.vue";
 import InputColor from "../components/InputColor.vue";
 import EmptyHome from "../components/EmptyHome.vue";
@@ -15,7 +16,7 @@ export default defineComponent({
 
   data() {
     return {
-      shades: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900],
+      shades: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950],
       palettes: [] as Palette[],
       error: "",
       wiggle: false,
@@ -27,7 +28,7 @@ export default defineComponent({
   mounted() {
     const query = this.$route.query || {};
 
-    // Set the palettes values from the querystring
+    // Set the palettes values from the query-string
     this.palettes = Object.keys(query).map(name => {
       const color = query[name] as string;
       const palette = useColors(color);
