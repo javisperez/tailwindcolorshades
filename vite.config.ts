@@ -7,7 +7,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   // @ts-ignore
-  base: import.meta.env.PROD ? "/tailwindcolorshades/" : "/",
+  base: process.env.NODE_ENV === 'production' ? "/tailwindcolorshades/" : "/",
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
