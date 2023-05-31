@@ -33,17 +33,16 @@ export default defineComponent({
 
   watch: {
     isEditing(isEditing, wasEditing) {
-      // When done editting, if the name changes we need to update the url
+      // When done editing, if the name changes we need to update the url
       if (wasEditing && !isEditing) {
         const query = this.$route.query;
         const newQuery = {
           ...query,
+          [this.name]: undefined,
           [this.colorName]: query[this.name]
         };
 
-        // Remove the old color name from the querystring
-        delete newQuery[this.name];
-
+        // Update the query string with the renamed colors
         this.$router.push({
           path: "/",
           query: newQuery
@@ -54,12 +53,12 @@ export default defineComponent({
 
   computed: {
     // Everything runs around the 500 color
-    baseColor(): string {
+    baseColor() {
       return this.colors[500];
     },
 
-    // The soruce code of this palette
-    source(): string {
+    // The source code of this palette
+    source() {
       return useSource({
         name: this.colorName.toLowerCase(),
         colors: this.includeInSource.reduce(
@@ -157,17 +156,19 @@ export default defineComponent({
 
     <!-- Color palette -->
     <div
-      v-for="(color, shade) in colors"
+      v-for="(color, shade, i) in colors"
       :key="color"
       class="text-center text-xs max-w-24 w-full h-24 relative overflow-hidden"
-    >
+      :class="{
+        'rounded-l-lg': i === 0,
+        'rounded-r-lg': i === 10,
+      }">
       <!-- Palette -->
       <div
-        class="w-full h-full flex items-center justify-center"
+        class="w-full h-full flex items-center justify-center transition"
         :class="!isIncludedInTheSource(shade) && 'opacity-25'"
-        :style="
-          `background-color: ${color}; ${!isIncludedInTheSource(shade) &&
-            `background-image: linear-gradient(45deg,
+        :style="`background-color: ${color}; ${!isIncludedInTheSource(shade) &&
+          `background-image: linear-gradient(45deg,
               rgba(0, 0, 0, 0.125) 12.5%,
               rgba(255, 255, 255, 0.5) 12.5%,
               rgba(255, 255, 255, 0.5) 37.5%,
@@ -178,7 +179,7 @@ export default defineComponent({
               rgba(0, 0, 0, 0.125) 87.5%
             );
             background-size: 25px 25px; background-position: 0px 0px;`}`
-        "
+          "
       >
         <transition
           :enter-active-class="`transition delay-${shade}`"
@@ -188,7 +189,7 @@ export default defineComponent({
           leave-from-class="transform translate-y-0 opacity-100"
           leave-to-class="transform -translate-y-2 opacity-0"
         >
-          <span
+          <button
             class="bg-gray-700 cursor-pointer flex items-center justify-center p-1 rounded-full text-white"
             :class="{
               'line-through': !isIncludedInTheSource(shade),
@@ -196,11 +197,10 @@ export default defineComponent({
             }"
             v-show="isEditing"
             @click="toggleIncludeShade(shade)"
-            :title="
-              !isIncludedInTheSource(shade)
-                ? 'This shade will be ignored from the source'
-                : 'This shade will be included in the source'
-            "
+            :title="!isIncludedInTheSource(shade)
+              ? 'This shade will be ignored from the source'
+              : 'This shade will be included in the source'
+              "
           >
             <span class="bg-black h-4 w-4 mr-1 rounded-full inline-block">
               <svg
@@ -222,7 +222,7 @@ export default defineComponent({
             </span>
 
             Include
-          </span>
+          </button>
         </transition>
       </div>
 
@@ -366,7 +366,7 @@ export default defineComponent({
       <!-- Done -->
       <button
         :disabled="!colorName"
-        :title="!colorName && 'The name for this palette is not valid'"
+        :title="!colorName ? 'The name for this palette is not valid' : ''"
         class="flex items-center text-xs mt-2 transition transform font-medium"
         :class="{
           'cursor-not-allowed': !colorName,
@@ -486,7 +486,7 @@ export default defineComponent({
         </h2>
         <pre
           class="lowercase text-sm bg-gray-900 rounded-lg p-4 text-gray-300 "
-          :class="`hex${this.baseColor.replace('#', '')}`"
+          :class="`hex${baseColor.replace('#', '')}`"
           >{{ source }}</pre
         >
       </div>

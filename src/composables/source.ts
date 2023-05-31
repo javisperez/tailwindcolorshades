@@ -1,7 +1,7 @@
+import type { Palette } from "./colors";
 import { computed } from "vue";
-import { Palette } from "./colors";
 
-export default function(palette: Palette) {
+export default function (palette: Palette) {
   const shades = computed(() => Object.keys(palette.colors));
 
   const shadesSource = computed(() =>

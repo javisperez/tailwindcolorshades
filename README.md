@@ -11,7 +11,7 @@ Is a tool to make shades and tints for a given color and generate the proper cod
 The idea is to make the custom color generation a bit easier when creating custom color variants to use in your app's CSS.
 
 ## How to use it
-Just place a name and a color on the inputs and will generate 5 tints (50, 100, 200, 300, 400) and 4 shades (600, 700, 800, 900) for that given color. An automatic name generation will be used for the css class names but you can rename them at anytime.
+Just place a name and a color on the inputs and will generate 5 tints (50, 100, 200, 300, 400) and 5 shades (600, 700, 800, 900, 950) for that given color. An automatic name generation will be used for the css class names but you can rename them at anytime.
 
 After that you can copy/paste the generated colors into your Tailwind config file and start using them in your css.
 

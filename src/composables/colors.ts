@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
 // @ts-ignore
 import colorNamer from "color-namer";
 
@@ -6,7 +5,7 @@ export type Palette = {
   name: string;
   colors: {
     [key: number]: string;
-  };
+  }
 };
 
 type Rgb = {
@@ -15,7 +14,8 @@ type Rgb = {
   b: number;
 };
 
-function hexToRgb(hex: string): Rgb | null {
+function hexToRgb(hex: String): Rgb | null {
+  // @ts-ignore
   const sanitizedHex = hex.replaceAll("##", "#");
   const colorParts = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
     sanitizedHex
@@ -90,7 +90,11 @@ export function getColorName(color: string): string {
   return sanitizedName;
 }
 
-export default function(baseColor: string): Palette {
+export default function (baseColor?: string): Palette | undefined {
+  if (!baseColor) {
+    return
+  }
+
   const name = getColorName(baseColor);
 
   const response: Palette = {
@@ -111,14 +115,15 @@ export default function(baseColor: string): Palette {
     600: 0.9,
     700: 0.75,
     800: 0.6,
-    900: 0.49
+    900: 0.45,
+    950: 0.25
   };
 
   [50, 100, 200, 300, 400].forEach(level => {
     response.colors[level] = lighten(baseColor, intensityMap[level]);
   });
 
-  [600, 700, 800, 900].forEach(level => {
+  [600, 700, 800, 900, 950].forEach(level => {
     response.colors[level] = darken(baseColor, intensityMap[level]);
   });
 
