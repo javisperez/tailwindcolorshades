@@ -47,7 +47,7 @@ jobs:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Test
-          command: pnpm test:unit
+          command: pnpm test:unit run
   deploy:
     docker:
       - image: guergeiro/pnpm:18-8
