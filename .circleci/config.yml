@@ -63,7 +63,7 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-      -setup
+      - setup
       - test:
           requires:
             - setup
