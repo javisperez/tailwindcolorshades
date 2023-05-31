@@ -3,13 +3,18 @@
 
 # show where we are on the machine
 pwd
+ls -l .
 
 remote=$(git config remote.origin.url)
 ga=$(cat .ga | sed s/'$GA_TRACKING_ID'/"$GA_TRACKING_ID"/g)
 
 # make a directory to put the gp-pages branch
+echo "Current dist content:"
+ls -l "./dist/"
+
 mkdir gh-pages-branch
 cd gh-pages-branch
+
 # now lets setup a new repo so we can update the gh-pages branch
 git config --global user.email "$GH_EMAIL"
 git config --global user.name "$GH_NAME"
