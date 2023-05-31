@@ -54,7 +54,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+          key: build-output-{{ .Environment.CIRCLE_SHA1 }}
       - deploy:
           name: Deploy gh-pages to Github Pages
           command: './deploy.sh dist'
