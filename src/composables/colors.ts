@@ -1,10 +1,11 @@
+// @ts-ignore
 import colorNamer from "color-namer";
 
 export type Palette = {
   name: string;
   colors: {
     [key: number]: string;
-  };
+  }
 };
 
 type Rgb = {
@@ -14,6 +15,7 @@ type Rgb = {
 };
 
 function hexToRgb(hex: String): Rgb | null {
+  // @ts-ignore
   const sanitizedHex = hex.replaceAll("##", "#");
   const colorParts = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
     sanitizedHex

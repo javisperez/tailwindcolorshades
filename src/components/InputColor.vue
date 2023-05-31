@@ -1,8 +1,9 @@
 <script lang="ts">
-import useColors, { Palette } from "@/composables/colors";
+import type { Palette } from "@/composables/colors";
+import useColors from "@/composables/colors";
 import { defineComponent } from "vue";
 
-let throttle = 0;
+let throttle:ReturnType<typeof setTimeout> | null = null;
 
 export default defineComponent({
   name: "InputColor",
@@ -20,8 +21,6 @@ export default defineComponent({
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-      // @ts-ignore
       const color = this.color;
 
       if (this.color.length === 4) {
@@ -81,19 +80,17 @@ export default defineComponent({
     },
 
     /**
-     * We are throttling this because this updates everytie
+     * We are throttling this because this updates every time
      * the color picker is dragged, which causes lag and delay
      */
-    updateInputColorValue(e: KeyboardEvent) {
+    updateInputColorValue(e: Event) {
       if (throttle) {
         return;
       }
 
       throttle = setTimeout(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        this.color = e.target.value;
-        throttle = 0;
+        this.color = (e.target as HTMLInputElement)?.value;
+        throttle = null;
       }, 120);
     },
 

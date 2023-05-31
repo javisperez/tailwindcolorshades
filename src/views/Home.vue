@@ -29,13 +29,14 @@ export default defineComponent({
     const query = this.$route.query || {};
 
     // Set the palettes values from the query-string
+    // @ts-ignore
     this.palettes = Object.keys(query).map(name => {
       const color = query[name] as string;
       const palette = useColors(color);
 
       return {
         name,
-        colors: palette.colors
+        colors: palette?.colors
       };
     });
 
