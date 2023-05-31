@@ -22,7 +22,7 @@ git checkout gh-pages
 git rm -rf .
 
 # copy over or recompile the new site
-cp -a "../dist/." .
+cp -a "./dist/." .
 
 # append the analytics/tracking script
 sed "s#</body>#$(echo $ga)</body>#" index.html > tmp.html
