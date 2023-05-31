@@ -135,10 +135,10 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="capitalize text-xs h-24 mb-8 flex">
+  <div class="capitalize text-xs lg:h-24 mb-8 flex flex-col lg:flex-row">
     <!-- Color name -->
     <div
-      class="max-w-64 w-full text-right pr-4 h-24 flex items-center justify-end font-medium uppercase text-gray-900 hover:text-black"
+      class="max-w-64 w-full lg:text-right pr-4 h-24 flex items-center lg:justify-end font-medium uppercase text-gray-900 hover:text-black"
     >
       <div v-if="isEditing">
         <label for="color-cde" class="sr-only">color code</label>
@@ -147,7 +147,7 @@ export default defineComponent({
           name="color-code"
           id="color-code"
           class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm
-          border-gray-300 rounded-md text-right"
+          border-gray-300 rounded-md lg:text-right"
           v-model="colorName"
         />
       </div>
@@ -158,14 +158,14 @@ export default defineComponent({
     <div
       v-for="(color, shade, i) in colors"
       :key="color"
-      class="text-center text-xs max-w-24 w-full h-24 relative overflow-hidden"
+      class="text-center text-xs lg:max-w-24 basis-24 lg:basis-auto w-full min-h-[6rem] h-24 relative overflow-hidden"
       :class="{
-        'rounded-l-lg': i === 0,
-        'rounded-r-lg': i === 10,
+        'lg:rounded-l-lg': i === 0,
+        'lg:rounded-r-lg': i === 10,
       }">
       <!-- Palette -->
       <div
-        class="w-full h-full flex items-center justify-center transition"
+        class="w-full h-24 lg:h-full flex lg:items-center lg:justify-center transition p-3"
         :class="!isIncludedInTheSource(shade) && 'opacity-25'"
         :style="`background-color: ${color}; ${!isIncludedInTheSource(shade) &&
           `background-image: linear-gradient(45deg,
@@ -181,6 +181,7 @@ export default defineComponent({
             background-size: 25px 25px; background-position: 0px 0px;`}`
           "
       >
+        <div class="block lg:hidden text-left">{{  shade }}</div>
         <transition
           :enter-active-class="`transition delay-${shade}`"
           :leave-active-class="`transition delay-${shade}`"
@@ -228,7 +229,7 @@ export default defineComponent({
 
       <!-- Hex code -->
       <span
-        class="inline-flex items-center bottom-2 absolute left-1/2 transform -translate-x-1/2 lowercase"
+        class="absolute bottom-2 left-3 lg:left-1/2 transform lg:-translate-x-1/2 lowercase"
         :style="`color: ${getTextColor(color)}`"
       >
         {{ color }}

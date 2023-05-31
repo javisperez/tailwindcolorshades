@@ -250,7 +250,7 @@ export default defineComponent({
         leave-to-class="opacity-0"
       >
         <div
-          class="flex sticky top-20 bg-white z-10 py-1"
+          class="sticky top-20 bg-white z-10 py-1 hidden lg:flex"
           v-show="palettes.length"
         >
           <div class="max-w-64 w-full capitalize text-center"></div>
@@ -266,25 +266,25 @@ export default defineComponent({
       </transition>
 
       <!-- Palettes -->
-      <div class="mt-4">
-        <transition-group
-          enter-active-class="transition"
-          leave-active-class="transition"
-          enter-from-class="transform -translate-y-5 scale-95 opacity-0"
-          enter-to-class="transform translate-y-0 opacity-100"
-          leave-from-class="transform translate-y-0 absolute opacity-100"
-          leave-to-class="transform -translate-y-5 scale-95 opacity-0"
-          move-class="transition"
-        >
+      <transition-group
+        tag="ul"
+        class="mt-4"
+        enter-active-class="transition"
+        leave-active-class="transition"
+        enter-from-class="transform -translate-y-5 scale-95 opacity-0"
+        enter-to-class="transform translate-y-0 opacity-100"
+        leave-from-class="transform translate-y-0 absolute opacity-100"
+        leave-to-class="transform -translate-y-5 scale-95 opacity-0"
+        move-class="transition"
+      >
+        <li v-for="palette in palettes" :key="palette.name">
           <ColorsPalette
             :name="palette.name"
             :colors="palette.colors"
-            v-for="palette in palettes"
-            :key="palette.name"
             @remove="removePalette"
           />
-        </transition-group>
-      </div>
+        </li>
+      </transition-group>
     </div>
   </main>
 

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { routeLocationKey, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const key = computed(() => JSON.stringify(route.query))
+// This must be a string, but we dont care about it,
+// we only want to know if a value was paste from no qs at all, to some value.
+const key = computed(() => Boolean(Object.values(route.query).length).toString())
 </script>
 
 <template>
