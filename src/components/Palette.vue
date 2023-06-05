@@ -178,7 +178,7 @@ export default defineComponent({
               rgba(255, 255, 255, 0.5) 87.5%,
               rgba(0, 0, 0, 0.125) 87.5%
             );
-            background-size: 25px 25px; background-position: 0px 0px;`}`
+            background-size: 31px 31px; background-position: 0px 0px;`}`
           "
       >
         <div class="block lg:hidden text-left">{{  shade }}</div>
@@ -203,7 +203,7 @@ export default defineComponent({
               : 'This shade will be included in the source'
               "
           >
-            <span class="bg-black h-4 w-4 mr-1 rounded-full inline-block">
+            <span class="bg-black h-4 w-4 p-0.5 mr-1 rounded-full inline-block">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="ti ti-success toe-icon"
@@ -343,8 +343,7 @@ export default defineComponent({
       <button
         class="flex items-center text-xs mt-2 transition transform font-medium text-gray-500 cursor-pointer hover:text-black hover:translate-x-1"
         @click="isEditing = true"
-        v-if="!isEditing"
-      >
+        v-if="!isEditing">
         <!-- Pen icon -->
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -354,8 +353,7 @@ export default defineComponent({
           stroke="currentColor"
           stroke-width="0"
           stroke-linecap="round"
-          stroke-linejoin="round"
-        >
+          stroke-linejoin="round">
           <path
             d="M55.944 51.712v4.201l-33.652-.027 4.71-4.174h28.942zM48.389 8c1.649 0 2.505.128 4.752 2.011 2.294 1.921 2.707 3.419 2.803 5.087.102 1.795-.504 3.976-2.188 5.681L21.795 52.74c-.52.475-.629.45-.977.553L10.592 55.85c-1.472.299-2.854-1.049-2.55-2.55l2.557-10.226c.1-.334.133-.517.553-.976 10.696-10.697 21.195-21.594 32.09-32.087C44.663 8.676 46.739 8 48.389 8zM16.014 43.182l-1.477 1.477-1.566 6.262 6.262-1.566 1.479-1.474-4.698-4.699zM46.19 22.609l-4.802-4.801-22.493 22.493 4.712 4.713c7.549-7.448 15.196-14.801 22.583-22.405zm2.826-2.936c.618-.648 1.234-1.298 1.848-1.951 1.673-1.826.443-5.454-2.307-5.578-.056-.002-.112-.002-.168-.002a3.406 3.406 0 00-2.312.977l-1.807 1.808 4.746 4.746z"
             fill-rule="nonzero"
@@ -374,8 +372,7 @@ export default defineComponent({
           'text-green-500 cursor-pointer hover:text-black hover:translate-x-1': colorName
         }"
         v-else
-        @click="isEditing = false"
-      >
+        @click="isEditing = false">
         <!-- Checkmark icon -->
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -387,30 +384,21 @@ export default defineComponent({
           stroke="currentColor"
           stroke-width="0"
           stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path
-            d="M56.103 16.824L22.807 50.121 8.026 35.341l2.767-2.767 11.952 11.952 30.53-30.53 2.828 2.828z"
-            fill-rule="nonzero"
-          ></path>
+          stroke-linejoin="round">
+          <path d="M56.103 16.824L22.807 50.121 8.026 35.341l2.767-2.767 11.952 11.952 30.53-30.53 2.828 2.828z" fill-rule="nonzero"></path>
         </svg>
         Done
       </button>
     </div>
 
-    <!-- Source code -->
+    <!-- Source code modal -->
     <div
       class="fixed left-0 right-0 top-0 bottom-0 bg-black bg-opacity-50 z-20 opacity-0 pointer-events-none transition-opacity"
       :class="{
         'opacity-100 pointer-events-auto': isSourceVisible
-      }"
-    >
-      <div
-        class="w-full max-w-2xl absolute py-4 px-8 shadow-lg rounded top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white"
-      >
-        <h2
-          class="uppercase font-bold flex justify-between items-center text-base mb-4"
-        >
+      }">
+      <div class="w-full max-w-2xl absolute py-4 px-8 shadow-lg rounded top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white">
+        <h2 class="uppercase font-bold flex justify-between items-center text-base mb-4">
           <span class="flex-1">{{ colorName }}</span>
           <span
             class="flex items-center text-xs font-medium rounded-md px-2 py-1 normal-case"
@@ -418,8 +406,7 @@ export default defineComponent({
               'text-white bg-blue-500 hover:bg-blue-700 cursor-pointer': !isSourceCopied,
               'text-black': isSourceCopied
             }"
-            @click="copySource"
-          >
+            @click="copySource">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="toe-icon ti ti-clipboard-copy h-4 w-4"
@@ -429,15 +416,9 @@ export default defineComponent({
               stroke-width="0"
               stroke-linecap="round"
               stroke-linejoin="round"
-              v-if="!isSourceCopied"
-            >
-              <path
-                d="M49.979 40l-.021 10.005A5.998 5.998 0 0143.963 56H15.974a5.997 5.997 0 01-5.995-5.995L10 18.535a5.997 5.997 0 015.995-5.995h4.479V12a1.013 1.013 0 011.016-1.016h5.59s.07-2.956 2.899-2.956 2.871 2.956 2.871 2.956h5.515c.561 0 1.016.455 1.016 1.016v.54h4.603a5.997 5.997 0 015.995 5.995v10.72h-3.998l-.001-9.726a2.991 2.991 0 00-2.989-2.989h-3.61v.973c0 .562-.455 1.016-1.016 1.016H21.49a1.016 1.016 0 01-1.016-1.016v-.973h-3.486a2.991 2.991 0 00-2.989 2.989l-.021 29.481a2.99 2.99 0 002.989 2.989H42.97a2.99 2.99 0 002.989-2.989L45.98 40h3.999zm-20-30.618a1.521 1.521 0 010 3.041 1.521 1.521 0 010-3.041z"
-              ></path>
-              <path
-                fill-rule="nonzero"
-                d="M18 23h13.5v2H18zM18 28.244h10.457v2H18zM17.979 33.488h8.02v2h-8.02zM18 38.731h10.457v2H18zM18 43.975h13.5v2H18zM54 32.484v4.006H34.891l7.413 7.413-2.832 2.832-12.246-12.246.001-.001-.001-.001 12.246-12.246 2.832 2.832-7.411 7.411H54z"
-              ></path>
+              v-if="!isSourceCopied">
+              <path d="M49.979 40l-.021 10.005A5.998 5.998 0 0143.963 56H15.974a5.997 5.997 0 01-5.995-5.995L10 18.535a5.997 5.997 0 015.995-5.995h4.479V12a1.013 1.013 0 011.016-1.016h5.59s.07-2.956 2.899-2.956 2.871 2.956 2.871 2.956h5.515c.561 0 1.016.455 1.016 1.016v.54h4.603a5.997 5.997 0 015.995 5.995v10.72h-3.998l-.001-9.726a2.991 2.991 0 00-2.989-2.989h-3.61v.973c0 .562-.455 1.016-1.016 1.016H21.49a1.016 1.016 0 01-1.016-1.016v-.973h-3.486a2.991 2.991 0 00-2.989 2.989l-.021 29.481a2.99 2.99 0 002.989 2.989H42.97a2.99 2.99 0 002.989-2.989L45.98 40h3.999zm-20-30.618a1.521 1.521 0 010 3.041 1.521 1.521 0 010-3.041z"></path>
+              <path fill-rule="nonzero" d="M18 23h13.5v2H18zM18 28.244h10.457v2H18zM17.979 33.488h8.02v2h-8.02zM18 38.731h10.457v2H18zM18 43.975h13.5v2H18zM54 32.484v4.006H34.891l7.413 7.413-2.832 2.832-12.246-12.246.001-.001-.001-.001 12.246-12.246 2.832 2.832-7.411 7.411H54z"></path>
             </svg>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -450,19 +431,14 @@ export default defineComponent({
               stroke-width="0"
               stroke-linecap="round"
               stroke-linejoin="round"
-              v-else
-            >
-              <path
-                d="M56.103 16.824L22.807 50.121 8.026 35.341l2.767-2.767 11.952 11.952 30.53-30.53 2.828 2.828z"
-                fill-rule="nonzero"
-              ></path>
+              v-else>
+              <path d="M56.103 16.824L22.807 50.121 8.026 35.341l2.767-2.767 11.952 11.952 30.53-30.53 2.828 2.828z" fill-rule="nonzero"></path>
             </svg>
             {{ !isSourceCopied ? "Copy" : "Copied" }}
           </span>
           <span
             class="inline-block ml-4 cursor-pointer hover:text-black text-gray-700"
-            @click="isSourceVisible = false"
-          >
+            @click="isSourceVisible = false">
             <!-- Close modal -->
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -474,22 +450,15 @@ export default defineComponent({
               stroke="currentColor"
               stroke-width="0"
               stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M32.033 29.19l15.55-15.55 2.863 2.863-15.55 15.55 15.55 15.55-2.863 2.863-15.55-15.55-15.55 15.55-2.863-2.863 15.55-15.55-15.55-15.55 2.863-2.863 15.55 15.55z"
-              ></path>
-              <path
-                d="M32.033 29.19l15.55-15.55 2.863 2.863-15.55 15.55 15.55 15.55-2.863 2.863-15.55-15.55-15.55 15.55-2.863-2.863 15.55-15.55-15.55-15.55 2.863-2.863 15.55 15.55z"
-              ></path>
+              stroke-linejoin="round">
+              <path d="M32.033 29.19l15.55-15.55 2.863 2.863-15.55 15.55 15.55 15.55-2.863 2.863-15.55-15.55-15.55 15.55-2.863-2.863 15.55-15.55-15.55-15.55 2.863-2.863 15.55 15.55z"></path>
+              <path d="M32.033 29.19l15.55-15.55 2.863 2.863-15.55 15.55 15.55 15.55-2.863 2.863-15.55-15.55-15.55 15.55-2.863-2.863 15.55-15.55-15.55-15.55 2.863-2.863 15.55 15.55z"></path>
             </svg>
           </span>
         </h2>
         <pre
           class="lowercase text-sm bg-gray-900 rounded-lg p-4 text-gray-300 "
-          :class="`hex${baseColor.replace('#', '')}`"
-          >{{ source }}</pre
-        >
+          :class="`hex${baseColor.replace('#', '')}`">{{ source }}</pre>
       </div>
     </div>
   </div>

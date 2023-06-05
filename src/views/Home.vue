@@ -6,12 +6,14 @@ import type { Palette } from "../composables/colors"
 import ColorsPalette from "../components/Palette.vue";
 import InputColor from "../components/InputColor.vue";
 import EmptyHome from "../components/EmptyHome.vue";
+import ImportCode from '../components/ImportCode.vue'
 
 export default defineComponent({
   components: {
     ColorsPalette,
     InputColor,
-    EmptyHome
+    EmptyHome,
+    ImportCode
   },
 
   data() {
@@ -21,6 +23,7 @@ export default defineComponent({
       error: "",
       wiggle: false,
       isSourceCopied: false,
+      isImportingCode: false,
       configCode: ""
     };
   },
@@ -79,7 +82,7 @@ export default defineComponent({
     removePalette(baseColor: string) {
       const index = this.palettes.findIndex(p => p.colors[500] === baseColor);
 
-      // If the given color doesnt exist, dont do anything
+      // If the given color doesn't exist, don't do anything
       if (index === -1) {
         return;
       }
@@ -156,6 +159,21 @@ export default defineComponent({
           return "";
         })
         .join(",");
+    },
+
+    importColors(colors: { [key: string]: string | { 500: string } }) {
+      Object.keys(colors).forEach((colorName: string) => {
+        const colorValue = colors[colorName]
+        const generatedColors = useColors(typeof colorValue === 'object' ? colorValue[500] : colorValue)
+
+        this.palettes.push({
+          name: colorName,
+          colors: {
+            ...(generatedColors as Palette).colors,
+            ...(typeof colorValue === 'object' ? colorValue : { [500]: colorValue })
+          }
+        })
+      })
     }
   }
 });
@@ -163,17 +181,14 @@ export default defineComponent({
 
 <template>
   <header class="fixed top-0 left-0 right-0 bg-white z-20">
-    <div
-      class="max-w-7xl mx-auto lg:divide-y lg:divide-gray-200 md:px-2 lg:px-8 border-b border-gray-200 py-6 flex items-center justify-between"
-    >
+    <div class="max-w-7xl mx-auto lg:divide-y lg:divide-gray-200 md:px-2 lg:px-8 border-b border-gray-200 py-6 flex items-center justify-between">
       <div class="relative flex justify-between w-full flex-col md:flex-row">
         <!-- Branding / Logo -->
         <div class="flex-shrink-0 flex items-center mb-4 md:mb-0 px-2 md:px-0">
           <img
             class="block h-8 w-auto"
             src="../assets/images/logo.png"
-            alt="Logo"
-          />
+            alt="Logo" />
           <div class="text-lg font-medium leading-5 ml-2">
             SHADES GENERATOR
             <div class="text-sm font-light leading-3 text-gray-600">
@@ -182,21 +197,25 @@ export default defineComponent({
           </div>
         </div>
 
-        <div
-          class="relative z-0 flex-1 flex items-center justify-center sm:absolute sm:inset-0 mb-4 md:mb-0 px-2"
-        >
+        <div class="relative z-0 flex-1 flex items-center justify-center sm:absolute sm:inset-0 mb-4 md:mb-0 px-2">
           <!-- Color Input -->
           <InputColor @generate="onGenerate" />
         </div>
 
         <div class="relative lg:z-10 lg:ml-4 flex items-center md:px-0 px-2">
+          <!-- Import code -->
+          <button type="button" class="inline-flex items-center md:px-3 md:py-2 p-3 border border-transparent text-sm leading-4 font-medium rounded-md
+              text-primary-700 bg-white hover:bg-slate-400 hover:text-white focus:outline-none focus:ring-2
+              focus:ring-offset-2 focus:ring-primary-500 mr-2 focus:bg-slate-400 focus:text-white
+              w-full text-center md:w-auto md:text-left" @click="isImportingCode = true">
+              Import
+          </button>
           <!-- Copy all source -->
           <transition
             enter-active-class="animate-wiggle"
             leave-active-class="transition duration-300"
             leave-from-class="transform scale-100 opacity-100"
-            leave-to-class="transform scale-50 opacity-0"
-          >
+            leave-to-class="transform scale-50 opacity-0">
             <button
               type="button"
               class="inline-flex items-center md:px-3 md:py-2 p-3 border border-transparent text-sm leading-4 font-medium rounded-md
@@ -205,8 +224,7 @@ export default defineComponent({
               w-full text-center md:w-auto md:text-left"
               :class="wiggle && 'animate-wiggle'"
               v-show="palettes.length > 0"
-              @click="copySource"
-            >
+              @click="copySource">
               {{ !isSourceCopied ? "Copy Config Code" : "Copied!" }}
             </button>
           </transition>
@@ -247,18 +265,15 @@ export default defineComponent({
         enter-from-class="opacity-0"
         enter-to-class="opacity-100"
         leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
+        leave-to-class="opacity-0">
         <div
           class="sticky top-20 bg-white z-10 py-1 hidden lg:flex"
-          v-show="palettes.length"
-        >
+          v-show="palettes.length">
           <div class="max-w-64 w-full capitalize text-center"></div>
           <div
             v-for="shade in shades"
             :key="shade"
-            class="max-w-24 w-full text-center text-xs"
-          >
+            class="max-w-24 w-full text-center text-xs">
             {{ shade }}
           </div>
           <div class="max-w-24 w-full capitalize text-center"></div>
@@ -275,8 +290,7 @@ export default defineComponent({
         enter-to-class="transform translate-y-0 opacity-100"
         leave-from-class="transform translate-y-0 absolute opacity-100"
         leave-to-class="transform -translate-y-5 scale-95 opacity-0"
-        move-class="transition"
-      >
+        move-class="transition">
         <li v-for="palette in palettes" :key="palette.name">
           <ColorsPalette
             :name="palette.name"
@@ -288,10 +302,23 @@ export default defineComponent({
     </div>
   </main>
 
+  <Teleport to="body">
+    <div
+      v-if="isImportingCode"
+      class="fixed left-0 right-0 top-0 bottom-0 bg-black bg-opacity-50 z-20 opacity-0 pointer-events-none transition-opacity"
+      :class="{
+        'opacity-100 pointer-events-auto': isImportingCode
+      }">
+      <div class="w-full max-w-4xl absolute p-4 shadow-lg rounded top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white">
+        <ImportCode
+          @close="isImportingCode = false"
+          @submit="importColors" />
+      </div>
+    </div>
+  </Teleport>
+
   <!-- All source -->
   <pre
     id="config-source-code"
-    class="fixed text-xs opacity-0 pointer-events-none top-0 overflow-hidden"
-    >{{ configCode }}</pre
-  >
+    class="fixed text-xs opacity-0 pointer-events-none top-0 overflow-hidden">{{ configCode }}</pre>
 </template>

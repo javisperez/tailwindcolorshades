@@ -10,6 +10,9 @@ devDependencies:
   '@tsconfig/node18':
     specifier: ^2.0.1
     version: 2.0.1
+  '@types/codemirror':
+    specifier: ^5.60.7
+    version: 5.60.7
   '@types/jsdom':
     specifier: ^21.1.1
     version: 21.1.1
@@ -31,9 +34,18 @@ devDependencies:
   autoprefixer:
     specifier: ^10.4.14
     version: 10.4.14(postcss@8.4.24)
+  codemirror:
+    specifier: ^5.65.12
+    version: 5.65.13
+  codemirror-editor-vue3:
+    specifier: ^2.3.0
+    version: 2.3.0(codemirror@5.65.13)(diff-match-patch@1.0.5)(vue@3.3.4)
   color-namer:
     specifier: ^1.4.0
     version: 1.4.0
+  diff-match-patch:
+    specifier: ^1.0.5
+    version: 1.0.5
   eslint:
     specifier: ^8.41.0
     version: 8.41.0
@@ -1728,6 +1740,12 @@ packages:
     resolution: {integrity: sha512-mEo1sAde+UCE6b2hxn332f1g1E8WfYRu6p5SvTKr2ZKC1f7gFJXk4h5PyGP9Dt6gCaG8y8XhwnXWC6Iy2cmBng==}
     dev: true
 
+  /@types/codemirror@5.60.7:
+    resolution: {integrity: sha512-QXIC+RPzt/1BGSuD6iFn6UMC9TDp+9hkOANYNPVsjjrDdzKphfRkwQDKGp2YaC54Yhz0g6P5uYTCCibZZEiMAA==}
+    dependencies:
+      '@types/tern': 0.23.4
+    dev: true
+
   /@types/estree@0.0.39:
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
     dev: true
@@ -1756,6 +1774,12 @@ packages:
 
   /@types/semver@7.5.0:
     resolution: {integrity: sha512-G8hZ6XJiHnuhQKR7ZmysCeJWE08o8T0AXtk5darsCaTVsYZhhgUrq53jizaR2FvsoeCwJhlmwTjkXBY5Pn/ZHw==}
+    dev: true
+
+  /@types/tern@0.23.4:
+    resolution: {integrity: sha512-JAUw1iXGO1qaWwEOzxTKJZ/5JxVeON9kvGZ/osgZaJImBnyjyn0cjovPsf6FNLmyGY8Vw9DoXZCMlfMkMwHRWg==}
+    dependencies:
+      '@types/estree': 0.0.39
     dev: true
 
   /@types/tough-cookie@4.0.2:
@@ -2435,6 +2459,22 @@ packages:
     resolution: {integrity: sha512-jTwQiT859RTFN/vIf7s+Vl/Z2LcMrvMv3WUFmd/4u76AdlFC0NTNgqEEFPcRiHmAswPsMiQEDZLM8vX8qXpZNQ==}
     dev: true
 
+  /codemirror-editor-vue3@2.3.0(codemirror@5.65.13)(diff-match-patch@1.0.5)(vue@3.3.4):
+    resolution: {integrity: sha512-e6y/2wBL4Xb4SD10e/jq/lcoIeiWPMw2XnF6KePLlbmOphZ830XGU3kSz52qkoa9RUjaY6zHuSlwd09o13O/oQ==}
+    peerDependencies:
+      codemirror: ^5.x
+      diff-match-patch: ^1.0.5
+      vue: ^3.x
+    dependencies:
+      codemirror: 5.65.13
+      diff-match-patch: 1.0.5
+      vue: 3.3.4
+    dev: true
+
+  /codemirror@5.65.13:
+    resolution: {integrity: sha512-SVWEzKXmbHmTQQWaz03Shrh4nybG0wXx2MEu3FO4ezbPW8IbnZEd5iGHGEffSUaitKYa3i+pHpBsSvw8sPHtzg==}
+    dev: true
+
   /color-convert@1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}
     dependencies:
@@ -2635,6 +2675,10 @@ packages:
 
   /didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
+    dev: true
+
+  /diff-match-patch@1.0.5:
+    resolution: {integrity: sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw==}
     dev: true
 
   /dir-glob@3.0.1:

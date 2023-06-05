@@ -80,6 +80,10 @@ function darken(hex: string, intensity: number): string {
   return rgbToHex(r, g, b);
 }
 
+export function isValidHexColorCode(str: string) {
+  return /^#([0-9A-Fa-f]{3}){1,2}$/.test(str);
+}
+
 export function getColorName(color: string): string {
   const { name } = colorNamer(`#${color}`.replace("##", "#")).ntc[0];
   const sanitizedName = name
@@ -90,17 +94,24 @@ export function getColorName(color: string): string {
   return sanitizedName;
 }
 
+export function sixDigitsColorHex (hexColor: string) {
+  const hexValue = hexColor.replace('#', '')
+  return `#${(hexValue.length === 3 ? hexValue.replace(/(.)/g, '$1$1') : hexValue.padEnd(6, '0'))}`;
+}
+
 export default function (baseColor?: string): Palette | undefined {
   if (!baseColor) {
     return
   }
 
-  const name = getColorName(baseColor);
+  const fullColorCode = sixDigitsColorHex(baseColor)
+
+  const name = getColorName(fullColorCode);
 
   const response: Palette = {
     name,
     colors: {
-      500: `#${baseColor}`.replace("##", "#")
+      500: fullColorCode
     }
   };
 
@@ -120,11 +131,11 @@ export default function (baseColor?: string): Palette | undefined {
   };
 
   [50, 100, 200, 300, 400].forEach(level => {
-    response.colors[level] = lighten(baseColor, intensityMap[level]);
+    response.colors[level] = lighten(fullColorCode, intensityMap[level]);
   });
 
   [600, 700, 800, 900, 950].forEach(level => {
-    response.colors[level] = darken(baseColor, intensityMap[level]);
+    response.colors[level] = darken(fullColorCode, intensityMap[level]);
   });
 
   return response as Palette;
