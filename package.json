@@ -26,6 +26,7 @@
     "autoprefixer": "^10.4.14",
     "codemirror": "^5.65.12",
     "codemirror-editor-vue3": "^2.3.0",
+    "color-convert": "^2.0.1",
     "color-namer": "^1.4.0",
     "diff-match-patch": "^1.0.5",
     "eslint": "^8.41.0",
