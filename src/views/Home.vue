@@ -174,6 +174,9 @@ export default defineComponent({
           }
         })
       })
+
+      // Send the stats to google analytics
+      trackAnalytics("colors", "imported", JSON.stringify(colors));
     }
   }
 });
