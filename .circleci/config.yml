@@ -32,7 +32,7 @@ jobs:
 
   build:
     docker:
-      - image: cimg/node:20.11
+      - image: node:23
     steps:
       - checkout
       - run:
@@ -57,7 +57,7 @@ jobs:
 
   test:
     docker:
-      - image: cimg/node:20.11
+      - image: node:23
     steps:
       - checkout
       - run:
@@ -73,7 +73,7 @@ jobs:
 
   deploy:
     docker:
-      - image: cimg/node:20.11
+      - image: node:23
     steps:
       - checkout
       - run:
