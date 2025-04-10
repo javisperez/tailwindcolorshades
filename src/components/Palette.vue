@@ -16,6 +16,11 @@ export default defineComponent({
     colors: {
       type: Object,
       required: true
+    },
+
+    version: {
+      type: String,
+      default: "v4"
     }
   },
 
@@ -68,7 +73,7 @@ export default defineComponent({
           },
           {}
         )
-      });
+      }, this.version === 'v4');
     }
   },
 

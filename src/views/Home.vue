@@ -7,13 +7,15 @@ import ColorsPalette from "../components/Palette.vue";
 import InputColor from "../components/InputColor.vue";
 import EmptyHome from "../components/EmptyHome.vue";
 import ImportCode from '../components/ImportCode.vue'
+import TailwindVersionSelector from '../components/TailwindVersionSelector.vue'
 
 export default defineComponent({
   components: {
     ColorsPalette,
     InputColor,
     EmptyHome,
-    ImportCode
+    ImportCode,
+    TailwindVersionSelector
   },
 
   data() {
@@ -24,6 +26,7 @@ export default defineComponent({
       wiggle: false,
       isSourceCopied: false,
       isImportingCode: false,
+      isTailwindV4: (!this.$route.query?.version || this.$route.query?.version === "v4"),
       configCode: ""
     };
   },
@@ -34,6 +37,10 @@ export default defineComponent({
     // Set the palettes values from the query-string
     // @ts-ignore
     this.palettes = Object.keys(query).map(name => {
+      if (name === 'version') {
+        return;
+      }
+
       const color = query[name] as string;
       const palette = useColors(color);
 
@@ -41,7 +48,7 @@ export default defineComponent({
         name,
         colors: palette?.colors
       };
-    });
+    }).filter(Boolean) as Palette[];
 
     // Send the stats to google analytics
     trackAnalytics("colors", "from-url", window.location.search.substring(1));
@@ -158,7 +165,8 @@ export default defineComponent({
 
           return "";
         })
-        .join(",");
+        .join(",")
+        .replace(/},@theme {\n/g, '');
     },
 
     importColors(colors: { [key: string]: string | { 500: string } }) {
@@ -177,6 +185,17 @@ export default defineComponent({
 
       // Send the stats to google analytics
       trackAnalytics("colors", "imported", JSON.stringify(colors));
+    },
+
+    onVersionChange(version: 'v4' | 'v3') {
+      this.isTailwindV4 = (version === 'v4')
+      this.$router.push({
+        path: '/',
+        query: {
+          ...this.$route.query,
+          version
+        }
+      })
     }
   }
 });
@@ -187,7 +206,7 @@ export default defineComponent({
     <div class="max-w-7xl mx-auto lg:divide-y lg:divide-gray-200 md:px-2 lg:px-8 border-b border-gray-200 py-6 flex items-center justify-between">
       <div class="relative flex justify-between w-full flex-col md:flex-row">
         <!-- Branding / Logo -->
-        <div class="flex-shrink-0 flex items-center mb-4 md:mb-0 px-2 md:px-0">
+        <RouterLink to="/" class="z-10 flex-shrink-0 flex items-center mb-4 md:mb-0 px-2 md:px-0">
           <img
             class="block h-8 w-auto"
             src="../assets/images/logo.png"
@@ -198,21 +217,28 @@ export default defineComponent({
               for Tailwind CSS
             </div>
           </div>
-        </div>
+        </RouterLink>
 
         <div class="relative z-0 flex-1 flex items-center justify-center sm:absolute sm:inset-0 mb-4 md:mb-0 px-2">
           <!-- Color Input -->
-          <InputColor @generate="onGenerate" />
+          <InputColor class="sm:max-w-md" @generate="onGenerate" />
         </div>
 
         <div class="relative lg:z-10 lg:ml-4 flex items-center md:px-0 px-2">
+          <TailwindVersionSelector class="mr-2"
+            :version="isTailwindV4 ? 'v4' : 'v3'"
+            @select="onVersionChange" />
+
           <!-- Import code -->
-          <button type="button" class="inline-flex items-center md:px-3 md:py-2 p-3 border border-transparent text-sm leading-4 font-medium rounded-md
-              text-primary-700 bg-white hover:bg-slate-400 hover:text-white focus:outline-none focus:ring-2
+          <button :disabled="isTailwindV4" type="button" class="inline-flex items-center md:px-3 md:py-2 p-3 border border-transparent text-sm leading-4 font-medium rounded-md
+              text-primary-700 bg-white enabled:hover:bg-slate-400 enabled:hover:text-white focus:outline-none focus:ring-2
               focus:ring-offset-2 focus:ring-primary-500 mr-2 focus:bg-slate-400 focus:text-white
-              w-full text-center md:w-auto md:text-left" @click="isImportingCode = true">
+              w-full text-center md:w-auto md:text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              :title="isTailwindV4 ? 'Import not available for Tailwind v4' : 'Import your tailwind config colors'"
+              @click="isImportingCode = true">
               Import
           </button>
+
           <!-- Copy all source -->
           <transition
             enter-active-class="animate-wiggle"
@@ -258,6 +284,7 @@ export default defineComponent({
   </header>
 
   <main class="md:mt-32 mt-52 relative">
+
     <EmptyHome v-if="!palettes.length" />
 
     <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8" v-else>
@@ -298,6 +325,7 @@ export default defineComponent({
           <ColorsPalette
             :name="palette.name"
             :colors="palette.colors"
+            :version="isTailwindV4 ? 'v4' : 'v3'"
             @remove="removePalette"
           />
         </li>
