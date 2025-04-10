@@ -230,10 +230,12 @@ export default defineComponent({
             @select="onVersionChange" />
 
           <!-- Import code -->
-          <button type="button" class="inline-flex items-center md:px-3 md:py-2 p-3 border border-transparent text-sm leading-4 font-medium rounded-md
-              text-primary-700 bg-white hover:bg-slate-400 hover:text-white focus:outline-none focus:ring-2
+          <button :disabled="isTailwindV4" type="button" class="inline-flex items-center md:px-3 md:py-2 p-3 border border-transparent text-sm leading-4 font-medium rounded-md
+              text-primary-700 bg-white enabled:hover:bg-slate-400 enabled:hover:text-white focus:outline-none focus:ring-2
               focus:ring-offset-2 focus:ring-primary-500 mr-2 focus:bg-slate-400 focus:text-white
-              w-full text-center md:w-auto md:text-left" @click="isImportingCode = true">
+              w-full text-center md:w-auto md:text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              :title="isTailwindV4 ? 'Import not available for Tailwind v4' : 'Import your tailwind config colors'"
+              @click="isImportingCode = true">
               Import
           </button>
 

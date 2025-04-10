@@ -99,7 +99,7 @@ const submit = () => {
 
 <template>
   <div class="relative">
-    <h1 class="text-lg font-medium text-gray-600">Import your custom colors</h1>
+    <h1 class="text-lg font-medium text-gray-600">Import your custom colors (Tailwind v3 support only).</h1>
     <h2 class="text-sm text-gray-500">Add a custom <strong>json</strong> value to import, or just paste your current ones from your tailwind config file.</h2>
     <button class="absolute top-0 right-0 text-lg hover:text-black focus:text-black text-gray-500 px-1.5" aria-label="Close the import modal" @click="close">
       &times;
