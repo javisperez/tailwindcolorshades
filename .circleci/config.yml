@@ -1,61 +1,58 @@
-version: 2.1
-
+version: 2
 jobs:
+  setup:
+    docker:
+      - image: guergeiro/pnpm:22-9
+    steps:
+      - checkout
+      - run:
+          name: Versions
+          command: |
+            node --version
+            pnpm --version
+      - restore_cache:
+          key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+      - run:
+          name: Install
+          command: pnpm install --frozen-lockfile
+      - save_cache:
+          key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+          - node_modules
   build:
     docker:
-      - image: node:20
-    resource_class: large
-    parallelism: 10
-
+      - image: guergeiro/pnpm:22-9
     steps:
       - checkout
       - restore_cache:
-          name: Restore pnpm Package Cache
-          keys:
-            - pnpm-packages-{{ checksum "pnpm-lock.yaml" }}
+          key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
       - run:
-          name: Install pnpm package manager
+          name: Build
           command: |
-            npm install --global corepack@latest
-            corepack enable
-            corepack prepare pnpm@latest-10 --activate
-            pnpm config set store-dir .pnpm-store
-      - run:
-          name: Install Dependencies
-          command: |
-            pnpm install
+            pnpm run build
+            ls dist
       - save_cache:
-          name: Save pnpm Package Cache
-          key: pnpm-packages-{{ checksum "pnpm-lock.yaml" }}
+          key: build-output-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - .pnpm-store
-
+            - dist
+      - store_artifacts:
+          path: dist
+          destination: dist
   test:
     docker:
-      - image: node:20
+      - image: guergeiro/pnpm:22-9
     steps:
       - checkout
-      - run:
-          name: Setup PNPM
-          command: |
-            curl -fsSL https://get.pnpm.io/install.sh | sh -
-            pnpm config set store-dir ~/.pnpm-store
       - restore_cache:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Test
           command: pnpm test:unit run
-
   deploy:
     docker:
-      - image: node:20
+      - image: guergeiro/pnpm:22-9
     steps:
       - checkout
-      - run:
-          name: Setup PNPM
-          command: |
-            curl -fsSL https://get.pnpm.io/install.sh | sh -
-            pnpm config set store-dir ~/.pnpm-store
       - restore_cache:
           key: build-output-{{ .Environment.CIRCLE_SHA1 }}
       - deploy:
