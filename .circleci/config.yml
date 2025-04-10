@@ -1,10 +1,19 @@
-version: 2
+version: 2.1 # Updated to 2.1 for orb support
+
+orbs:
+  node: circleci/node@5.1.0
+
 jobs:
   setup:
     docker:
-      - image: guergeiro/pnpm:18-8
+      - image: cimg/node:20.11 # Modern Node.js base image
     steps:
       - checkout
+      - run:
+          name: Setup PNPM
+          command: |
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+            pnpm config set store-dir ~/.pnpm-store
       - run:
           name: Versions
           command: |
@@ -18,12 +27,19 @@ jobs:
       - save_cache:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
           paths:
-          - node_modules
+            - node_modules
+            - ~/.pnpm-store
+
   build:
     docker:
-      - image: guergeiro/pnpm:18-8
+      - image: cimg/node:20.11
     steps:
       - checkout
+      - run:
+          name: Setup PNPM
+          command: |
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+            pnpm config set store-dir ~/.pnpm-store
       - restore_cache:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
       - run:
@@ -38,21 +54,33 @@ jobs:
       - store_artifacts:
           path: dist
           destination: dist
+
   test:
     docker:
-      - image: guergeiro/pnpm:18-8
+      - image: cimg/node:20.11
     steps:
       - checkout
+      - run:
+          name: Setup PNPM
+          command: |
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+            pnpm config set store-dir ~/.pnpm-store
       - restore_cache:
           key: dependency-cache-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Test
           command: pnpm test:unit run
+
   deploy:
     docker:
-      - image: guergeiro/pnpm:18-8
+      - image: cimg/node:20.11
     steps:
       - checkout
+      - run:
+          name: Setup PNPM
+          command: |
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+            pnpm config set store-dir ~/.pnpm-store
       - restore_cache:
           key: build-output-{{ .Environment.CIRCLE_SHA1 }}
       - deploy:
