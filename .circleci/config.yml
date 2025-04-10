@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: node:23
+      - image: node:20
     resource_class: large
     parallelism: 10
 
@@ -32,7 +32,7 @@ jobs:
 
   build:
     docker:
-      - image: node:23
+      - image: node:20
     steps:
       - checkout
       - run:
@@ -57,7 +57,7 @@ jobs:
 
   test:
     docker:
-      - image: node:23
+      - image: node:20
     steps:
       - checkout
       - run:
@@ -73,7 +73,7 @@ jobs:
 
   deploy:
     docker:
-      - image: node:23
+      - image: node:20
     steps:
       - checkout
       - run:
