@@ -158,7 +158,8 @@ export default defineComponent({
 
           return "";
         })
-        .join(",");
+        .join(",")
+        .replaceAll('},@theme {\n', '');
     },
 
     importColors(colors: { [key: string]: string | { 500: string } }) {
@@ -202,7 +203,7 @@ export default defineComponent({
 
         <div class="relative z-0 flex-1 flex items-center justify-center sm:absolute sm:inset-0 mb-4 md:mb-0 px-2">
           <!-- Color Input -->
-          <InputColor @generate="onGenerate" />
+          <InputColor class="sm:max-w-md" @generate="onGenerate" />
         </div>
 
         <div class="relative lg:z-10 lg:ml-4 flex items-center md:px-0 px-2">
