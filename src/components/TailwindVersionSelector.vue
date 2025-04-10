@@ -1,18 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 
-const emit = defineEmits(['select'])
+const emit = defineEmits<{
+  (event: 'select', version: 'v4' | 'v3'): void;
+}>()
 
-const props = defineProps({
-  version: {
-    type: String,
-    default: 'v4'
-  }
+const props = withDefaults(defineProps<{
+  version: string,
+}>(), {
+  version: 'v4'
 });
 
-const selectedVersion = ref(props.version || 'v4');
+const selectedVersion = ref<string>(props.version || 'v4');
 
-function setVersion(version) {
+function setVersion(version: 'v4' | 'v3') {
   selectedVersion.value = version;
   emit('select', version);
 }

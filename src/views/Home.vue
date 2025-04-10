@@ -166,7 +166,7 @@ export default defineComponent({
           return "";
         })
         .join(",")
-        .replaceAll('},@theme {\n', '');
+        .replace(/},@theme {\n/g, '');
     },
 
     importColors(colors: { [key: string]: string | { 500: string } }) {
