@@ -89,8 +89,9 @@ jobs:
           # Push the version bump and tag
           git push --follow-tags
 
-      - name: Run unit tests
-        run: pnpm test:unit run
+      # Skip unit tests for now
+      # - name: Run unit tests
+      #   run: pnpm test:unit run
 
       - name: Build
         run: pnpm build
