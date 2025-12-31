@@ -1,0 +1,120 @@
+# Tailwind CSS Color Shades Generator
+
+> A modern tool for generating color palettes for Tailwind CSS projects
+
+## Overview
+
+This is a free, open-source web application that helps developers and designers create custom color palettes for Tailwind CSS. The tool generates 11 shades (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950) from a base color, ensuring visual harmony and proper contrast across all levels.
+
+## Key Features
+
+- **Multiple Color Formats**: Generate colors in OKLCH or HEX formats
+- **Tailwind v3 & v4 Support**: Compatible with both major Tailwind CSS versions
+- **11 Shade Levels**: Automatically generates the full Tailwind color scale (50-950)
+- **Customizable Names**: Auto-generate color names or provide your own
+- **Export/Import**: Copy configurations to clipboard or import existing ones
+- **URL Sharing**: Share palettes via URL parameters
+- **Selective Export**: Choose which shade levels to include
+- **Dark Mode Support**: Built-in dark mode for comfortable use
+
+## Technology Stack
+
+- **Frontend**: Vue 3 with Composition API
+- **Language**: TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS v4
+- **Color Libraries**: Culori and Chroma.js for color manipulation
+- **State Management**: VueUse composables
+
+## Use Cases
+
+1. **Creating Brand Colors**: Generate a full color scale from your brand's primary color
+2. **Design Systems**: Build consistent color palettes for design systems
+3. **Tailwind Customization**: Extend or replace Tailwind's default color palette
+4. **Accessibility**: Ensure proper contrast ratios across color shades
+5. **Prototyping**: Quickly test different color schemes
+
+## How It Works
+
+1. User selects a base color using the color picker
+2. Algorithm generates 11 shades using perceptually uniform color spaces (OKLCH)
+3. Colors are displayed with preview swatches
+4. User can customize palette names and toggle individual shades
+5. Generated configuration can be copied in Tailwind v3 or v4 format
+
+## Output Formats
+
+### Tailwind v3 (JavaScript)
+```javascript
+colors: {
+  'custom': {
+    50: '#f0f9ff',
+    100: '#e0f2fe',
+    // ... more shades
+  }
+}
+```
+
+### Tailwind v4 (CSS)
+```css
+@theme {
+  --color-custom-50: oklch(0.98 0.01 240);
+  --color-custom-100: oklch(0.95 0.03 240);
+  /* ... more shades */
+}
+```
+
+## Installation & Development
+
+This is a client-side only application. To run locally:
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Build for production:
+```bash
+pnpm build
+```
+
+## Repository
+
+- **GitHub**: https://github.com/javisperez/tailwindcolorshades
+- **Live Demo**: https://javisperez.github.io/tailwindcolorshades
+- **License**: MIT
+- **Author**: Javis Pérez
+
+## Common Questions
+
+**Q: What color format should I use?**
+A: OKLCH is recommended for Tailwind v4 as it provides better perceptual uniformity. HEX works for both v3 and v4.
+
+**Q: Can I import my existing Tailwind colors?**
+A: Yes, the tool supports importing existing color configurations.
+
+**Q: How do I share my palette?**
+A: Your palette is automatically encoded in the URL. Just copy and share the URL.
+
+**Q: Is this tool free?**
+A: Yes, completely free and open source under MIT license.
+
+## Related Tools & Resources
+
+- Tailwind CSS Official Documentation: https://tailwindcss.com
+- OKLCH Color Picker: https://oklch.com
+- Tailwind Color Palette Reference: https://tailwindcss.com/docs/customizing-colors
+
+## Project Status
+
+Actively maintained. Version 2.0.2 (as of December 2025)
+
+## Contributing
+
+Contributions welcome for:
+- Bug fixes
+- New features
+- Documentation improvements
+- Performance enhancements
+
+See the GitHub repository for contribution guidelines.
