@@ -1,0 +1,128 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
+        run: |
+          # Get commit messages since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s")
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+          fi
+
+          # Determine version bump type
+          if echo "$COMMITS" | grep -qiE "^feat(\(.+\))?:"; then
+            BUMP_TYPE="minor"
+          elif echo "$COMMITS" | grep -qiE "^fix(\(.+\))?:"; then
+            BUMP_TYPE="patch"
+          else
+            BUMP_TYPE="patch"
+          fi
+
+          echo "Bumping $BUMP_TYPE version"
+
+          # Bump version in package.json
+          pnpm version $BUMP_TYPE -m "chore: bump version to %s [skip ci]"
+
+          # Get new version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          # Push the version bump and tag
+          git push --follow-tags
+
+      - name: Run unit tests
+        run: pnpm test:unit run
+
+      - name: Build
+        run: pnpm build
+        env:
+          NODE_ENV: production
+
+      - name: Inject Google Analytics
+        run: |
+          if [ -f ".ga" ] && [ -n "${{ secrets.GA_TRACKING_ID }}" ]; then
+            echo "Injecting Google Analytics into index.html..."
+            # Read the GA script template and substitute the tracking ID
+            ga_script=$(cat .ga | sed "s/\$GA_TRACKING_ID/${{ secrets.GA_TRACKING_ID }}/g")
+            # Inject the script before the closing </body> tag using a more robust approach
+            awk -v ga="$ga_script" '{
+              if ($0 ~ /<\/body>/) {
+                print ga
+              }
+              print $0
+            }' dist/index.html > dist/tmp.html && mv dist/tmp.html dist/index.html
+            echo "Google Analytics script injected successfully"
+          else
+            echo "Skipping Google Analytics injection (no .ga file or GA_TRACKING_ID secret)"
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

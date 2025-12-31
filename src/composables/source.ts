@@ -1,32 +1,88 @@
-import type { Palette } from "./colors";
-import { computed } from "vue";
+import type { Palette } from "@/components/ColorPalette.vue";
+import { ref, unref, watchEffect } from "vue";
+import type { MaybeRefOrGetter } from "vue";
+import { COLOR_STEPS } from "@/constants";
+import { parse, formatHex, formatCss, converter } from 'culori';
 
-export default function useTailwindTheme(palette: Palette, isV4: boolean = true) {
-  // Source code for Tailwind CSS v4
-  const getV4Source = () => {
-    const themeVariables = computed(() =>
-      Object.entries(palette.colors)
-        .map(([shade, colorValue]) => `  --color-${palette.name.toLowerCase()}-${shade}: ${colorValue};`)
-        .join("\n")
-    );
+type ColorFormat = 'oklch' | 'hex';
+type ColorSteps = typeof COLOR_STEPS;
+type ConfigVersion = 'v4' | 'v3';
+type ColorsToInclude = Map<string, ColorSteps[number][]>;
 
-    return `@theme {\n${themeVariables.value}\n}`;
+const toOklch = converter('oklch')
+
+// given a color string in either oklch or hex format, return it in the format of the preference
+function formatColorValue(color: string, format: ColorFormat): string {
+  const parsed = parse(color);
+  if (!parsed) {
+    return color;
   }
 
-  // Source code for Tailwind CSS v3
-  const getV3Source = () => {
-    const shades = computed(() => Object.keys(palette.colors));
+  return format === 'oklch' ? formatCss(toOklch(parsed)) : formatHex(parsed);
+}
 
-    const shadesSource = computed(() =>
-      shades.value.map(
-        (shade: string) => `    '${shade}': '${palette.colors[Number(shade)]}'`
-      )
-    );
+// Source code for Tailwind CSS v4
+function getV4Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncludePerPalette: ColorsToInclude) {
+  const themeVariables = palettes.map((palette) =>
+    Object.entries(palette.colors)
+      .map(([shade, colorValue]) => {
+        const shadeNum = parseInt(shade) as (typeof COLOR_STEPS)[number];
+        if (!colorsToIncludePerPalette.get(palette.name)?.includes(shadeNum)) {
+          return '';
+        }
+
+        return `  --color-${palette.name.toLowerCase()}-${shade}: ${formatColorValue(colorValue, colorFormat)};`
+      })
+      .filter(line => line !== '')
+      .join("\n")
+  ).join("\n\n");
+
+  return `@theme {\n${themeVariables}\n}`;
+}
+
+// Source code for Tailwind CSS v3
+function getV3Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncludePerPalette: ColorsToInclude) {
+  const configValues = palettes.map((palette) => {
+    const shades = Object.keys(palette.colors);
+    const shadesSource = shades.map(
+      (shade: string) => {
+        const colorValue = formatColorValue(palette.colors[Number(shade)], colorFormat);
+        const shadeNum = parseInt(shade) as (typeof COLOR_STEPS)[number];
+        if (!colorsToIncludePerPalette.get(palette.name)?.includes(shadeNum)) {
+          return '';
+        }
+        return `  '${shade}': '${colorValue}'`;
+      }
+    ).filter(line => line !== '');
 
     return `'${palette.name.toLowerCase()}': {
-${shadesSource.value.join(", \n")}
+${shadesSource.join(",\n")}
 }`;
+  }).join(",\n");
+
+  return configValues;
+}
+
+export default function useTailwindConfig(
+  palettes: Palette[],
+  configVersion: MaybeRefOrGetter<ConfigVersion> = 'v4',
+  colorFormat: MaybeRefOrGetter<ColorFormat> = 'oklch',
+  colorsToIncludePerPalette: MaybeRefOrGetter<ColorsToInclude> = new Map()
+) {
+  const result = ref<string>("");
+
+  const configPerVersion = {
+    'v4': getV4Config,
+    'v3': getV3Config
   }
 
-  return isV4 ? getV4Source() : getV3Source();
+  watchEffect(() => {
+    const unrefFormat = unref(colorFormat) as ColorFormat
+    const unrefVersion = unref(configVersion) as ConfigVersion
+    const unrefColorsToIncludePerPalette = unref(colorsToIncludePerPalette) as ColorsToInclude
+
+    result.value = configPerVersion[unrefVersion](palettes, unrefFormat, unrefColorsToIncludePerPalette);
+  })
+
+  return result;
 }

@@ -1,19 +1,89 @@
-# Color shades generators for TailwindCSS
+# Color Shades Generator for Tailwind CSS
 
-[![CircleCI branch](https://img.shields.io/circleci/project/github/javisperez/tailwindcolorshades/master.svg)](https://circleci.com/gh/javisperez/tailwindcolorshades/tree/master)
+A modern tool for generating color palettes for your Tailwind CSS projects. Built with Vue 3, TypeScript, and Vite.
 
-## To use this app
-Go to [https://javisperez.github.io/tailwindcolorshades](https://javisperez.github.io/tailwindcolorshades)
+## Live Demo
+
+Visit [https://javisperez.github.io/tailwindcolorshades](https://javisperez.github.io/tailwindcolorshades) to try it out.
 
 ## What is this?
-Is a tool to make shades and tints for a given color and generate the proper code for the **TailwindCSS** config file.
 
-The idea is to make the custom color generation a bit easier when creating custom color variants to use in your app's CSS.
+This tool helps you create custom color palettes for Tailwind CSS by generating shades and tints from a base color. It supports both Tailwind CSS v3 and v4 configurations, with support for OKLCH and HEX format.
 
-## How to use it
-Just place a name and a color on the inputs and will generate 5 tints (50, 100, 200, 300, 400) and 5 shades (600, 700, 800, 900, 950) for that given color. An automatic name generation will be used for the css class names but you can rename them at anytime.
+The goal is to simplify the process of creating custom color scales that maintain consistent visual harmony and proper contrast across all shade levels.
 
-After that you can copy/paste the generated colors into your Tailwind config file and start using them in your css.
+## Features
 
-## Contributions
-Feel free to fork this repo and send any Pull Request you want, every help is very much welcome :)
+- **Multiple Color Formats**: Generate colors in OKLCH, RGB, or HEX formats
+- **Tailwind v3 & v4 Support**: Compatible with both Tailwind CSS versions
+- **Color Generation**: Automatically generates 11 shades (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950)
+- **Customizable Names**: Auto-generate color names or provide your own
+- **Export Options**: Copy generated configurations directly to your clipboard
+- **Import Existing Configs**: Load and modify your existing Tailwind color configurations
+- **URL Sharing**: Share your palettes via URL parameters
+- **Selective Export**: Choose which shade levels to include in your config
+
+## How to Use
+
+1. Pick a base color using the color picker or adding the code in the color picker input
+2. The tool automatically generates 11 shades from light (50) to dark (950)
+3. Customize palette names or toggle which shades to include
+4. Copy the generated configuration (top button) and paste it into your Tailwind config file
+
+## Development
+
+### Prerequisites
+
+- Node.js 22+
+- pnpm
+
+### Project Setup
+
+```sh
+pnpm install
+```
+
+### Development Server
+
+Start the development server with hot-reload:
+
+```sh
+pnpm dev
+```
+
+### Build for Production
+
+Type-check, compile and minify:
+
+```sh
+pnpm build
+```
+
+### Testing (TODO)
+
+Run unit tests with Vitest:
+
+```sh
+pnpm test:unit
+```
+
+### Linting
+
+Lint and fix code:
+
+```sh
+pnpm lint
+```
+
+## Contributing
+
+Contributions are welcome! Feel free to fork this repository and submit pull requests for:
+
+- Bug fixes
+- New features
+- Documentation improvements
+- Performance enhancements
+
+## License
+
+This project is open source and available under the MIT License.
