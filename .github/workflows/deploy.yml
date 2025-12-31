@@ -58,6 +58,7 @@ jobs:
 
       - name: Bump version
         id: version
+        if: github.run_attempt == 1
         run: |
           # Get commit messages since last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
