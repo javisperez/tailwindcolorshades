@@ -63,21 +63,6 @@ function updateAllFromColor(inputColor: string) {
   oklchString.value = `oklch(${l.value.toFixed(2)} ${c.value.toFixed(2)} ${Math.round(h.value)})`
 }
 
-// function updateFromOklch() {
-//   const match = oklchString.value.match(/oklch\(([^)]+)\)/)
-//   if (!match) {
-//     return
-//   }
-//   const [lVal, cVal, hVal] = match[1].split(' ').map(Number)
-//   if (isNaN(lVal) || isNaN(cVal) || isNaN(hVal)) {
-//     return
-//   }
-//   l.value = lVal
-//   c.value = cVal
-//   h.value = hVal
-//   hexInput.value = toRgbHex({ mode: 'oklch', l: l.value, c: c.value, h: h.value })
-// }
-
 // Click Outside
 function handleClickOutside(event: MouseEvent) {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {

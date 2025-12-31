@@ -232,7 +232,7 @@ watchEffect(() => {
           'rotate-30': isOptionsSideOpen,
         }" />
       </button>
-      <a href="https://github.com/javisperez/tailwind-colors-shades" target="_blank">
+      <a href="https://github.com/javisperez/tailwindcolorshades" target="_blank">
         <IconGithub class="size-6" />
       </a>
     </div>
