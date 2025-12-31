@@ -1,17 +1,23 @@
-import { URL, fileURLToPath } from 'node:url'
+import { fileURLToPath, URL } from 'node:url'
 
-import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
+import icons from 'unplugin-icons/vite'
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), VitePWA()],
-  // @ts-ignore
-  base: process.env.NODE_ENV === 'production' ? "/tailwindcolorshades/" : "/",
+  base: process.env.NODE_ENV === 'production' ? '/tailwindcolorshades/' : '/',
+  plugins: [
+    vue(),
+    tailwindcss(),
+    icons({
+      autoInstall: true
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  }
+    },
+  },
 })
