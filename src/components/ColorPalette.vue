@@ -114,9 +114,10 @@ onClickOutside(menuRef, () => {
 
 <template>
 <div tabindex="0"
-  class="bg-white/0 group transition border border-transparent hocus:border-black/10 dark:hocus:border-white/10 rounded-xl p-2 w-full grid palette-grid items-center"
+  class="bg-white/0 group transition border border-transparent hocus:border-black/10 dark:hocus:border-white/10 rounded-xl p-2 w-full grid palette-grid gap-1 md:gap-4 items-center"
   :aria-label="`Color palette form ${props.data.name}`">
-  <div class="col-span-2 text-xs flex items-center justify-start uppercase">
+  <!-- Mobile: Color name on left side of first row -->
+  <div class="md:hidden col-span-10 text-xs flex items-center justify-start uppercase">
     <template v-if="isEditing">
       <input
         :value="colorName"
@@ -130,9 +131,53 @@ onClickOutside(menuRef, () => {
       {{ colorName }}
     </template>
   </div>
+  <!-- Desktop: Color name -->
+  <div class="hidden md:flex md:col-span-2 text-xs items-center justify-start uppercase">
+    <template v-if="isEditing">
+      <input
+        :value="colorName"
+        @keyup.enter="stopEditing"
+        @keyup.esc="isEditing = false; colorName = props.data.name"
+        class="bg-white outline-none text-black rounded px-1 py-0.5 text-xs uppercase w-full"
+        type="text"
+        autofocus />
+    </template>
+    <template v-else>
+      {{ colorName }}
+    </template>
+  </div>
+  <!-- Mobile: Menu button on right side of first row -->
+  <div class="md:hidden relative col-span-1 justify-self-end">
+    <button class="rounded relative top-1"
+      :class="{ 'bg-gray-500': showMenu }"
+      @click="onMenuButtonClick">
+      <template v-if="!isEditing">
+        <IconMenu />
+      </template>
+      <template v-else>
+        <IconCheckAll class="text-green-500 hocus:text-white hocus:bg-green-800 p-1 rounded-full size-6" />
+      </template>
+    </button>
+    <div v-if="showMenu" ref="options-menu"
+      class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-10">
+      <button class="text-xs block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+        @click="isEditing = true; showMenu = false">
+        Edit
+      </button>
+      <button class="text-xs block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+        @click="copySourceToClipboard();">
+        {{ isCopied ? 'Copied!' : 'Copy source' }}
+      </button>
+      <button class="text-xs block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+        @click="deletePalette();">
+        Delete
+      </button>
+    </div>
+  </div>
+  <!-- Color shades -->
   <Tooltip v-for="step in COLOR_STEPS" :key="step" :text="props.data.colors[step]" position="top">
     <div
-      class="flex-1 aspect-square rounded-xl border border-transparent relative"
+      class="flex-1 aspect-square rounded-sm md:rounded-xl border border-transparent relative"
       :style="includedColors.includes(step)
         ? `background-color: ${props.data.colors[step]}`
         : `background-color: transparent; border-color: ${props.data.colors[step]}`">
@@ -143,7 +188,8 @@ onClickOutside(menuRef, () => {
       </button>
     </div>
   </Tooltip>
-  <div class="relative">
+  <!-- Desktop: Menu button -->
+  <div class="hidden md:block relative">
     <button class="rounded relative top-1"
       :class="{ 'bg-gray-500': showMenu }"
       @click="onMenuButtonClick">
@@ -175,7 +221,12 @@ onClickOutside(menuRef, () => {
 
 <style>
 .palette-grid {
-  grid-template-columns: repeat(13, minmax(0, 1fr)) 24px;
-  gap: calc(4 * var(--spacing));
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+}
+
+@media (min-width: theme('screens.md')) {
+  .palette-grid {
+    grid-template-columns: repeat(13, minmax(0, 1fr)) 24px;
+  }
 }
 </style>

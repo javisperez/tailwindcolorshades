@@ -197,8 +197,8 @@ watchEffect(() => {
 
 <template>
 <main class="min-h-screen flex flex-col relative">
-  <header class="grid grid-cols-3 items-center py-3 px-4 relative">
-    <div class="logo flex items-center">
+  <header class="grid grid-cols-1 lg:grid-cols-3 items-center gap-4 py-3 px-4 relative">
+    <div class="logo flex items-center justify-between lg:justify-start">
       <a href="/" class="inline-flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400" aria-label="home">
         <svg class="size-8" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g>
@@ -211,28 +211,40 @@ watchEffect(() => {
 
         <span class="font-bold text-lg">Tailwind Color Shades</span>
       </a>
+
+      <div class="flex lg:hidden items-center gap-3">
+        <button @click="isOptionsSideOpen = !isOptionsSideOpen; trackInteraction('preferences_panel_toggle', 'click')">
+          <IconGear class="size-6 transition-transform" :class="{
+            'rotate-30': isOptionsSideOpen,
+          }" />
+        </button>
+        <a href="https://github.com/javisperez/tailwindcolorshades" target="_blank">
+          <IconGithub class="size-6" />
+        </a>
+      </div>
     </div>
     <div class="w-full">
       <ColorPicker class="mx-auto" v-model="selectedColor"
         @change="onColorChange" />
     </div>
-    <div class="flex items-center justify-end gap-4">
-      <button class="button button-borderless text-xs bg-gray-200 rounded-4xl px-3 gap-2"
+    <div class="flex items-center justify-center lg:justify-end gap-2 xl:gap-4 flex-wrap md:flex-nowrap">
+      <button class="whitespace-nowrap button button-borderless text-xs bg-gray-200 rounded-4xl px-3 gap-2"
         @click="isImportModalOpen = true; trackInteraction('import_modal_open', 'click')">
         <IconUpload class="size-4" />
-        Import config
+        <span>Import config</span>
       </button>
-      <button class="button button-borderless text-xs bg-gray-200 rounded-4xl px-3 gap-2"
+      <button class="whitespace-nowrap button button-borderless text-xs bg-gray-200 rounded-4xl px-3 gap-2"
         @click="copyToClipboard(source); trackColorEvent('copy', { shade_count: palettes.length, color_format: configFormat as 'hex' | 'oklch', config_version: configVersion as 'v3' | 'v4' })">
         <Component :is="!isCopied ? IconCopy : IconCheck" class="size-4" />
-        {{ isCopied ? 'Copied!' : 'Copy config' }}
+        <span>{{ isCopied ? 'Copied!' : 'Copy config' }}</span>
       </button>
-      <button @click="isOptionsSideOpen = !isOptionsSideOpen; trackInteraction('preferences_panel_toggle', 'click')">
+      <!-- Desktop: Settings and GitHub icons -->
+      <button class="hidden lg:block" @click="isOptionsSideOpen = !isOptionsSideOpen; trackInteraction('preferences_panel_toggle', 'click')">
         <IconGear class="size-6 transition-transform" :class="{
           'rotate-30': isOptionsSideOpen,
         }" />
       </button>
-      <a href="https://github.com/javisperez/tailwindcolorshades" target="_blank">
+      <a href="https://github.com/javisperez/tailwindcolorshades" target="_blank" class="hidden lg:block">
         <IconGithub class="size-6" />
       </a>
     </div>
@@ -245,9 +257,9 @@ watchEffect(() => {
 
     <template v-else>
       <div>
-        <div class="grid palette-grid px-2 mt-14 h-16 py-6 sticky top-0 z-1 bg-white dark:bg-gray-900 dark:text-gray-300">
-          <div class="col-span-2"></div>
-          <div v-for="step in COLOR_STEPS" :key="step" class="text-center">{{ step }}</div>
+        <div class="grid palette-grid px-2 mt-14 h-16 py-6 sticky top-0 z-1 bg-white dark:bg-gray-900 dark:text-gray-300 gap-1 md:gap-4 items-center">
+          <div class="hidden md:block md:col-span-2"></div>
+          <div v-for="step in COLOR_STEPS" :key="step" class="text-center [writing-mode:vertical-lr] md:[writing-mode:horizontal-tb]">{{ step }}</div>
         </div>
         <div>
           <ColorPalette
