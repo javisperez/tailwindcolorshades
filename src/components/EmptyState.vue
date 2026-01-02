@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { formatCss } from 'culori'
+import { formatCss, parse } from 'culori'
 import IconShuffle from '~icons/mdi/shuffle'
 import IconBarChart from '~icons/mdi/bar-chart'
 import IconArrowForward from '~icons/mdi/arrow-forward'
@@ -23,9 +23,9 @@ const palettes = ref<SamplePalette[]>([])
 function randomOKLCHColor() {
   return {
     mode: 'oklch' as const,
-    l: 0.5 + Math.random() * 0.2,
-    c: 0.1 + Math.random() * 0.2,
-    h: Math.random() * 360
+    l: (0.5 + Math.random() * 0.2).toFixed(2) as unknown as number,
+    c: (0.1 + Math.random() * 0.2).toFixed(2) as unknown as number,
+    h: Math.floor(Math.random() * 360)
   }
 }
 
@@ -73,6 +73,36 @@ function generateRandomColor() {
   return generatePaletteFromColor(random)
 }
 
+function convertSampleToPalettes(sample?: SamplePalette) {
+  // Safety check for undefined sample
+  if (!sample) {
+    return [generatePaletteFromColor(formatCss(randomOKLCHColor()) || '')]
+  }
+
+  // Generate a palette for each color in the sample
+  // Filter out any invalid colors using Culori's parse function
+  const palettesToGenerate: Array<{ color: string; name: string }> = [
+    { color: sample.background, name: 'background' },
+    { color: sample.text, name: 'text' },
+    { color: sample.primary, name: 'primary' },
+    { color: sample.secondary, name: 'secondary' },
+    { color: sample.accent, name: 'accent' },
+    { color: sample.highlight, name: 'highlight' },
+  ]
+
+  return palettesToGenerate
+    .filter(({ color }) => {
+      // Check if color is a valid string and can be parsed by Culori
+      if (!color || color.trim() === '') return false
+      const parsed = parse(color)
+      return parsed !== undefined
+    })
+    .map(({ color, name }) => ({
+      ...generatePaletteFromColor(color),
+      name
+    }))
+}
+
 onMounted(() => {
   generateSamplePalettes(3)
 })
@@ -103,7 +133,7 @@ onMounted(() => {
   </div>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
     <div class="empty-state-sample-card">
-      <div class="[&>*]:transition-colors">
+      <div class="*:transition-colors">
         <h4 class="font-semibold text-lg text-zinc-900 dark:text-white mb-4">E-commerce</h4>
         <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4"
           :style="{
@@ -136,7 +166,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="flex items-center gap-2 justify-between mt-4">
-        <a :href="`?${generatePalettesQueryString([palettes[0]])}`"
+        <a :href="`?${generatePalettesQueryString(convertSampleToPalettes(palettes[0]))}`"
           class="button bg-zinc-900 text-white"
           @click="trackColorEvent('generate', { color_value: 'sample_ecommerce' })">
           Use this palette
@@ -149,7 +179,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="empty-state-sample-card">
-      <div class="[&>*]:transition-colors">
+      <div class="*:transition-colors">
         <h4 class="font-semibold text-lg text-zinc-900 dark:text-white mb-4">SaaS Dashboard</h4>
         <div class="border border-zinc-200 rounded-xl p-4"
           :style="{
@@ -170,7 +200,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="flex items-center gap-2 justify-between mt-4">
-        <a :href="`?${generatePalettesQueryString([palettes[1]])}`"
+        <a :href="`?${generatePalettesQueryString(convertSampleToPalettes(palettes[1]))}`"
           class="button bg-zinc-900! text-white"
           @click="trackColorEvent('generate', { color_value: 'sample_dashboard' })">
           Use this palette
@@ -183,7 +213,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="empty-state-sample-card">
-      <div class="[&>*]:transition-colors">
+      <div class="*:transition-colors">
         <h4 class="font-semibold text-lg text-zinc-900 dark:text-white mb-4">Blog Post</h4>
         <div class="border border-zinc-200 rounded-xl overflow-hidden"
           :style="{
@@ -204,7 +234,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="flex items-center gap-2 justify-between mt-4">
-        <a :href="`?${generatePalettesQueryString([palettes[2]])}`"
+        <a :href="`?${generatePalettesQueryString(convertSampleToPalettes(palettes[2]))}`"
           class="button bg-zinc-900! text-white"
           @click="trackColorEvent('generate', { color_value: 'sample_blog' })">
           Use this palette

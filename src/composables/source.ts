@@ -64,7 +64,7 @@ ${shadesSource.join(",\n")}
 }
 
 export default function useTailwindConfig(
-  palettes: Palette[],
+  palettes: MaybeRefOrGetter<Palette[]>,
   configVersion: MaybeRefOrGetter<ConfigVersion> = 'v4',
   colorFormat: MaybeRefOrGetter<ColorFormat> = 'oklch',
   colorsToIncludePerPalette: MaybeRefOrGetter<ColorsToInclude> = new Map()
@@ -77,11 +77,12 @@ export default function useTailwindConfig(
   }
 
   watchEffect(() => {
+    const unrefPalettes = unref(palettes) as Palette[]
     const unrefFormat = unref(colorFormat) as ColorFormat
     const unrefVersion = unref(configVersion) as ConfigVersion
     const unrefColorsToIncludePerPalette = unref(colorsToIncludePerPalette) as ColorsToInclude
 
-    result.value = configPerVersion[unrefVersion](palettes, unrefFormat, unrefColorsToIncludePerPalette);
+    result.value = configPerVersion[unrefVersion](unrefPalettes, unrefFormat, unrefColorsToIncludePerPalette);
   })
 
   return result;

@@ -46,12 +46,34 @@ const importError = ref('')
 const currentNames = computed(() => palettes.value.map(palette => palette.name))
 
 queryString.forEach((value, key) => {
-  const colors = generateColorScale(value)
   const name = key
+  let colors: Record<number, string>
+  let anchors: Record<number, string> | undefined
+
+  // Check if the value contains anchor format (step:color or step:color,step:color)
+  if (value.includes(':')) {
+    // Parse anchor format: "700:#ff0000" or "200:#ff0000,500:#00ff00,800:#0000ff"
+    anchors = {}
+    const pairs = value.split(',')
+    pairs.forEach(pair => {
+      const [step, color] = pair.split(':')
+      if (step && color) {
+        anchors![parseInt(step)] = color
+      }
+    })
+
+    // Get base color for generation (use 500 if available, otherwise first anchor)
+    const baseColor = anchors[500] || Object.values(anchors)[0]
+    colors = generateColorScale(baseColor, anchors)
+  } else {
+    // Simple single-color format
+    colors = generateColorScale(value)
+  }
 
   palettes.value.push({
     name,
-    colors
+    colors,
+    ...(anchors && { anchors })
   })
 
   includedColorsPerPalette.value.set(
@@ -104,6 +126,65 @@ function onPaletteUpdate(palette: Palette, data: { includedColors: ColorStep[], 
 
   const query = generatePalettesQueryString(palettes.value)
   window.history.pushState({}, '', `?${query}`)
+}
+
+function onPaletteAnchorsUpdate(palette: Palette, anchors: Record<number, string>) {
+  const paletteIndex = palettes.value.indexOf(palette)
+
+  // Ensure at least one anchor exists - if all removed, keep 500 as default
+  if (Object.keys(anchors).length === 0) {
+    anchors = { 500: palette.colors[500] }
+  }
+
+  // Get the base color (use 500 if available, otherwise first anchor)
+  const baseColor = anchors[500] || palette.colors[500] || Object.values(anchors)[0]
+
+  // Regenerate the palette with the new anchors
+  const newColors = generateColorScale(baseColor, anchors)
+
+  // Update the palette
+  palettes.value[paletteIndex] = {
+    ...palette,
+    colors: newColors,
+    anchors
+  }
+
+  const query = generatePalettesQueryString(palettes.value)
+  window.history.pushState({}, '', `?${query}`)
+
+  // Track anchor update
+  trackColorEvent('update_anchors', {
+    anchor_count: Object.keys(anchors).length,
+    config_version: configVersion.value as 'v3' | 'v4',
+    color_format: configFormat.value as 'hex' | 'oklch'
+  })
+}
+
+function onPaletteRegenerate(palette: Palette, anchors: Record<number, string>) {
+  const paletteIndex = palettes.value.indexOf(palette)
+
+  // Get the base color (use 500 if available, otherwise closest to 500)
+  const baseColor = anchors[500] || palette.colors[500] || Object.values(anchors)[0]
+
+  // Regenerate using the original algorithm (force white/black mixing with proper intensities)
+  const newColors = generateColorScale(baseColor, anchors, true)
+
+  // Update the palette
+  palettes.value[paletteIndex] = {
+    ...palette,
+    colors: newColors,
+    anchors
+  }
+
+  const query = generatePalettesQueryString(palettes.value)
+  window.history.pushState({}, '', `?${query}`)
+
+  // Track regeneration
+  trackColorEvent('update_anchors', {
+    anchor_count: Object.keys(anchors).length,
+    config_version: configVersion.value as 'v3' | 'v4',
+    color_format: configFormat.value as 'hex' | 'oklch'
+  })
 }
 
 function handleImportConfig() {
@@ -267,6 +348,8 @@ watchEffect(() => {
             :key="palette.name"
             :data="palette"
             @update="onPaletteUpdate(palette, $event)"
+            @update-anchors="onPaletteAnchorsUpdate(palette, $event)"
+            @regenerate="onPaletteRegenerate(palette, $event)"
             @delete="($event: Palette) => paletteToDelete = $event"
           />
         </div>

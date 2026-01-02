@@ -12,7 +12,27 @@ export function generatePalettesQueryString(palettes: (Palette | Record<string, 
 
   palettes.forEach(palette => {
     if ('name' in palette && 'colors' in palette && palette?.name && palette?.colors) {
-      params.set(palette.name, palette.colors[500])
+      // If palette has anchors, check if we need to encode them
+      if (palette.anchors && Object.keys(palette.anchors).length > 0) {
+        const anchorSteps = Object.keys(palette.anchors).map(Number);
+
+        // Use anchor format if:
+        // 1. Multiple anchors, OR
+        // 2. Single anchor that's not at step 500
+        if (anchorSteps.length > 1 || (anchorSteps.length === 1 && anchorSteps[0] !== 500)) {
+          // Format: name=step1:color1,step2:color2,step3:color3
+          const anchorPairs = Object.entries(palette.anchors)
+            .sort(([a], [b]) => Number(a) - Number(b))
+            .map(([step, color]) => `${step}:${color}`)
+          params.set(palette.name, anchorPairs.join(','))
+        } else {
+          // Single anchor at 500 - use simple format
+          params.set(palette.name, palette.colors[500])
+        }
+      } else {
+        // No anchors - use simple format
+        params.set(palette.name, palette.colors[500])
+      }
     } else {
       Object.entries(palette).forEach(([key, value]) => {
         params.set(key, String(value))
