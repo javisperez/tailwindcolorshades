@@ -26,6 +26,7 @@ type ColorEventData = {
   shade_count?: number;
   color_value?: string;
   config_version?: 'v3' | 'v4';
+  anchor_count?: number;
 };
 
 type OptionEventData = {
@@ -57,7 +58,7 @@ export const trackEvent = (
  * Track color-related events
  */
 export const trackColorEvent = (
-  action: 'generate' | 'copy' | 'export' | 'import',
+  action: 'generate' | 'copy' | 'export' | 'import' | 'update_anchors' | 'change_anchor',
   data: ColorEventData = {}
 ): void => {
   trackEvent(`color_${action}`, {
