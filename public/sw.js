@@ -1,0 +1,11 @@
+// This service worker unregisters itself immediately.
+// It exists to replace the old PWA service worker so browsers
+// that still have the old one cached will pick this up as an update,
+// activate it, and then it will self-destruct.
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.registration.unregister());
+});
