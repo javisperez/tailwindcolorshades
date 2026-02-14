@@ -35,16 +35,20 @@
     <div id="app"></div>
     <div id="modals"></div>
     <script>
-      // Unregister old PWA service workers and clear caches
+      // Unregister old PWA service workers and clear caches for this app only
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
           registrations.forEach(function(registration) {
-            registration.unregister();
+            if (registration.scope.includes('/tailwindcolorshades')) {
+              registration.unregister();
+            }
           });
         });
         caches.keys().then(function(names) {
           names.forEach(function(name) {
-            caches.delete(name);
+            if (name.includes('workbox') || name.includes('tailwindcolorshades')) {
+              caches.delete(name);
+            }
           });
         });
       }
