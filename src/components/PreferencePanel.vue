@@ -8,6 +8,7 @@ import { trackOption } from '@/services/analytics';
 
 const configVersion = useLocalStorage(PREFERENCES_STORAGE_KEYS.version, 'v4')
 const colorFormat = useLocalStorage(PREFERENCES_STORAGE_KEYS.format, 'oklch')
+const includeWrapper = useLocalStorage(PREFERENCES_STORAGE_KEYS.wrapper, false)
 const currentTheme = useLocalStorage(PREFERENCES_STORAGE_KEYS.theme, 'light')
 
 // Track preference changes
@@ -22,6 +23,13 @@ watch(colorFormat, (newValue) => {
   trackOption('change', {
     setting_name: 'color_format',
     setting_value: newValue
+  })
+})
+
+watch(includeWrapper, (newValue) => {
+  trackOption('change', {
+    setting_name: 'include_wrapper',
+    setting_value: String(newValue)
   })
 })
 
@@ -58,6 +66,17 @@ watch(currentTheme, (newValue) => {
       <option value="v4">TailwindCSS v4</option>
       <option value="v3">TailwindCSS v3</option>
     </select>
+  </div>
+
+  <div>
+    <label class="flex items-start space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <input type="checkbox" v-model="includeWrapper" class="mt-1" />
+      <span>Wrap in {{ configVersion === 'v4' ? '@theme { }' : 'colors: { }' }}</span>
+    </label>
+    <p class="text-xs dark:text-gray-500 mt-2">
+      Off by default: only the {{ configVersion === 'v4' ? 'CSS variables' : 'color entries' }} are generated,
+      so you can paste them into existing scaffolding.
+    </p>
   </div>
 
   <div>

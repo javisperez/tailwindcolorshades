@@ -32,6 +32,7 @@ const systemTheme = mediaQuery.matches ? 'dark' : 'light'
 const { copy: copyToClipboard, copied: isCopied } = useClipboard()
 const configVersion = useLocalStorage(PREFERENCES_STORAGE_KEYS.version, 'v4')
 const configFormat = useLocalStorage(PREFERENCES_STORAGE_KEYS.format, 'oklch')
+const includeWrapper = useLocalStorage(PREFERENCES_STORAGE_KEYS.wrapper, false)
 const appTheme = useLocalStorage(PREFERENCES_STORAGE_KEYS.theme, systemTheme)
 
 const palettes = ref<Palette[]>([])
@@ -82,7 +83,7 @@ queryString.forEach((value, key) => {
   );
 });
 
-const source = useSource(palettes.value, configVersion as any, configFormat as any, includedColorsPerPalette)
+const source = useSource(palettes.value, configVersion as any, configFormat as any, includedColorsPerPalette, includeWrapper)
 
 function onColorChange(color: string) {
   let palette = generatePaletteFromColor(color)
@@ -109,6 +110,11 @@ function onColorChange(color: string) {
 function confirmDeletePalette() {
   if (paletteToDelete.value) {
     const paletteIndex = palettes.value.indexOf(paletteToDelete.value)
+    const previousKey = `${PREFERENCES_STORAGE_KEYS.previous}-${paletteToDelete.value.name.toLowerCase()}`
+    try {
+      sessionStorage.removeItem(previousKey)
+      sessionStorage.removeItem(`${previousKey}-visible`)
+    } catch { /* storage unavailable */ }
     palettes.value.splice(paletteIndex, 1)
     const query = generatePalettesQueryString(palettes.value)
     window.history.pushState({}, '', `?${query}`)
@@ -117,6 +123,20 @@ function confirmDeletePalette() {
     // Track palette deletion
     trackInteraction('delete_palette', 'click')
   }
+}
+
+function onPaletteMove(palette: Palette, direction: -1 | 1) {
+  const from = palettes.value.indexOf(palette)
+  const to = from + direction
+  if (from < 0 || to < 0 || to >= palettes.value.length) return
+
+  const [moved] = palettes.value.splice(from, 1)
+  palettes.value.splice(to, 0, moved)
+
+  const query = generatePalettesQueryString(palettes.value)
+  window.history.pushState({}, '', `?${query}`)
+
+  trackInteraction('move_palette', 'click')
 }
 
 function onPaletteUpdate(palette: Palette, data: { includedColors: ColorStep[], name: string }) {
@@ -342,17 +362,20 @@ watchEffect(() => {
           <div class="hidden md:block md:col-span-2"></div>
           <div v-for="step in COLOR_STEPS" :key="step" class="text-center [writing-mode:vertical-lr] md:[writing-mode:horizontal-tb]">{{ step }}</div>
         </div>
-        <div>
+        <TransitionGroup tag="div" move-class="transition-transform duration-300 ease-in-out">
           <ColorPalette
-            v-for="palette in palettes"
+            v-for="(palette, index) in palettes"
             :key="palette.name"
             :data="palette"
+            :is-first="index === 0"
+            :is-last="index === palettes.length - 1"
+            @move="onPaletteMove(palette, $event)"
             @update="onPaletteUpdate(palette, $event)"
             @update-anchors="onPaletteAnchorsUpdate(palette, $event)"
             @regenerate="onPaletteRegenerate(palette, $event)"
             @delete="($event: Palette) => paletteToDelete = $event"
           />
-        </div>
+        </TransitionGroup>
       </div>
     </template>
   </section>

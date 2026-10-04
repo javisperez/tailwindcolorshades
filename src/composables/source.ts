@@ -22,7 +22,7 @@ function formatColorValue(color: string, format: ColorFormat): string {
 }
 
 // Source code for Tailwind CSS v4
-function getV4Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncludePerPalette: ColorsToInclude) {
+function getV4Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncludePerPalette: ColorsToInclude, includeWrapper: boolean) {
   const themeVariables = palettes.map((palette) =>
     Object.entries(palette.colors)
       .map(([shade, colorValue]) => {
@@ -37,11 +37,11 @@ function getV4Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncl
       .join("\n")
   ).join("\n\n");
 
-  return `@theme {\n${themeVariables}\n}`;
+  return includeWrapper ? `@theme {\n${themeVariables}\n}` : themeVariables;
 }
 
 // Source code for Tailwind CSS v3
-function getV3Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncludePerPalette: ColorsToInclude) {
+function getV3Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncludePerPalette: ColorsToInclude, includeWrapper: boolean) {
   const configValues = palettes.map((palette) => {
     const shades = Object.keys(palette.colors);
     const shadesSource = shades.map(
@@ -60,14 +60,15 @@ ${shadesSource.join(",\n")}
 }`;
   }).join(",\n");
 
-  return configValues;
+  return includeWrapper ? `colors: {\n${configValues}\n}` : configValues;
 }
 
 export default function useTailwindConfig(
   palettes: MaybeRefOrGetter<Palette[]>,
   configVersion: MaybeRefOrGetter<ConfigVersion> = 'v4',
   colorFormat: MaybeRefOrGetter<ColorFormat> = 'oklch',
-  colorsToIncludePerPalette: MaybeRefOrGetter<ColorsToInclude> = new Map()
+  colorsToIncludePerPalette: MaybeRefOrGetter<ColorsToInclude> = new Map(),
+  includeWrapper: MaybeRefOrGetter<boolean> = false
 ) {
   const result = ref<string>("");
 
@@ -82,7 +83,7 @@ export default function useTailwindConfig(
     const unrefVersion = unref(configVersion) as ConfigVersion
     const unrefColorsToIncludePerPalette = unref(colorsToIncludePerPalette) as ColorsToInclude
 
-    result.value = configPerVersion[unrefVersion](unrefPalettes, unrefFormat, unrefColorsToIncludePerPalette);
+    result.value = configPerVersion[unrefVersion](unrefPalettes, unrefFormat, unrefColorsToIncludePerPalette, !!unref(includeWrapper));
   })
 
   return result;

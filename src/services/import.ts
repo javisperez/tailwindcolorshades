@@ -22,13 +22,9 @@ function parseV4Config(config: string): ImportResult {
   const singleColors = new Map<string, string>()
 
   try {
-    // Remove @theme wrapper and extract content
-    const themeMatch = config.match(/@theme\s*\{([^}]+)\}/s)
-    if (!themeMatch) {
-      return { palettes, error: 'Invalid v4 config format. Expected @theme { ... }' }
-    }
-
-    const content = themeMatch[1]
+    // Remove optional @theme wrapper; bare CSS variables are accepted too
+    const themeMatch = config.match(/@theme(?:\s+\w+)?\s*\{([^}]+)\}/s)
+    const content = themeMatch ? themeMatch[1] : config
 
     // First pass: Match colors with shades --color-name-shade: value;
     const shadedPropertyRegex = /--color-([a-zA-Z0-9-_]+)-(\d+)\s*:\s*([^;]+);/g
@@ -228,7 +224,7 @@ export function parseConfig(config: string): ImportResult {
   const trimmed = config.trim()
 
   // Detect v4 format by @theme directive
-  if (trimmed.includes('@theme')) {
+  if (trimmed.includes('@theme') || /--color-/.test(trimmed)) {
     return parseV4Config(trimmed)
   }
 

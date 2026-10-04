@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { COLOR_STEPS, PREFERENCES_STORAGE_KEYS } from '@/constants';
 import useSource from '@/composables/source';
-import { useClipboard, useLocalStorage, onClickOutside } from '@vueuse/core';
+import { useClipboard, useLocalStorage, useSessionStorage, onClickOutside } from '@vueuse/core';
 import IconMenu from '~icons/mdi/dots-vertical'
 import IconCheck from '~icons/mdi/check'
 import IconCheckAll from '~icons/mdi/check-all'
+import IconChevronUp from '~icons/mdi/chevron-up'
+import IconChevronDown from '~icons/mdi/chevron-down'
+import IconEye from '~icons/mdi/eye'
+import IconEyeOff from '~icons/mdi/eye-off'
 import IconPin from '~icons/mdi/pin'
 import IconPinOutline from '~icons/mdi/pin-outline'
 import { ref, computed, useTemplateRef } from 'vue';
@@ -25,17 +29,26 @@ export type Palette = {
 type ColorStep = (typeof COLOR_STEPS)[number];
 
 const props = defineProps<{
-  data: Palette
+  data: Palette,
+  isFirst?: boolean,
+  isLast?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'delete', palette: Palette): void,
+  (e: 'move', direction: -1 | 1): void,
   (e: 'rename', name: string): void,
   (e: 'update', data: { includedColors: ColorStep[], name: string }): void,
   (e: 'updateAnchors', anchors: Record<number, string>): void,
   (e: 'regenerate', anchors: Record<number, string>): void
 }>()
 
+// Kept in sessionStorage (per palette name) so the comparison survives a page refresh
+const previousStorageKey = `${PREFERENCES_STORAGE_KEYS.previous}-${props.data.name.toLowerCase()}`
+const previousColors = useSessionStorage<Palette['colors'] | null>(previousStorageKey, null, {
+  serializer: { read: (raw) => JSON.parse(raw), write: (value) => JSON.stringify(value) }
+})
+const showPrevious = useSessionStorage(`${previousStorageKey}-visible`, true)
 const includedColors = ref<ColorStep[]>(Object.keys(props.data.colors).map(s => parseInt(s)) as ColorStep[])
 // Always ensure 500 is pinned with the base color
 const anchors = ref<Record<number, string>>(props.data.anchors || { 500: props.data.colors[500] })
@@ -59,12 +72,14 @@ const includedColorsMap = computed(() => {
 const menuRef = useTemplateRef('options-menu')
 const configVersion = useLocalStorage(PREFERENCES_STORAGE_KEYS.version, 'v4')
 const configFormat = useLocalStorage(PREFERENCES_STORAGE_KEYS.format, 'oklch')
+const includeWrapper = useLocalStorage(PREFERENCES_STORAGE_KEYS.wrapper, false)
 const { copy, copied: isCopied } = useClipboard()
 const source = useSource(
   paletteForSource,
   computed(() => configVersion.value) as unknown as 'v3' | 'v4',
   computed(() => configFormat.value) as unknown as 'hex' | 'oklch',
-  includedColorsMap
+  includedColorsMap,
+  includeWrapper
 )
 
 const showMenu = ref(false)
@@ -82,6 +97,11 @@ function copySourceToClipboard() {
     config_version: configVersion.value as 'v3' | 'v4',
     shade_count: includedColors.value.length
   })
+}
+
+function movePalette(direction: -1 | 1) {
+  showMenu.value = false
+  emit('move', direction)
 }
 
 function deletePalette() {
@@ -126,6 +146,14 @@ function stopEditing(evt?: Event) {
   }
 }
 
+// Keep the colors from before the first custom color change, so the user can compare them with the current ones
+function snapshotForCompare() {
+  if (!previousColors.value) {
+    previousColors.value = { ...props.data.colors }
+    showPrevious.value = true
+  }
+}
+
 function toggleAnchor(step: ColorStep) {
   if (anchors.value[step]) {
     // Prevent removing the last anchor
@@ -138,6 +166,7 @@ function toggleAnchor(step: ColorStep) {
     const newAnchors = { ...anchors.value };
     delete newAnchors[step];
     anchors.value = newAnchors;
+    snapshotForCompare();
     emit('updateAnchors', anchors.value);
   } else {
     // Open color picker to set anchor
@@ -155,6 +184,7 @@ function onColorPickerApply(color: string) {
       [editingAnchorStep.value]: color
     };
 
+    snapshotForCompare();
     emit('updateAnchors', anchors.value);
 
     // Track anchor color change
@@ -195,6 +225,16 @@ onClickOutside(menuRef, () => {
     <template v-else>
       {{ colorName }}
     </template>
+    <div v-if="!isEditing" class="flex ml-2 flex-row items-center text-gray-400 dark:text-gray-500">
+        <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
+          :disabled="props.isFirst" aria-label="Move palette up" title="Move up" @click="movePalette(-1)">
+          <IconChevronUp class="size-4" />
+        </button>
+        <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
+          :disabled="props.isLast" aria-label="Move palette down" title="Move down" @click="movePalette(1)">
+          <IconChevronDown class="size-4" />
+        </button>
+      </div>
   </div>
   <!-- Desktop: Color name -->
   <div class="hidden md:flex md:col-span-2 text-xs items-center justify-start uppercase">
@@ -208,8 +248,18 @@ onClickOutside(menuRef, () => {
         autofocus />
     </template>
     <template v-else>
-      {{ colorName }}
+      <span class="flex-1">{{ colorName }}</span>
     </template>
+    <div v-if="!isEditing" class="flex flex-col items-center text-gray-400 dark:text-gray-500">
+        <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
+          :disabled="props.isFirst" aria-label="Move palette up" title="Move up" @click="movePalette(-1)">
+          <IconChevronUp class="size-4" />
+        </button>
+        <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
+          :disabled="props.isLast" aria-label="Move palette down" title="Move down" @click="movePalette(1)">
+          <IconChevronDown class="size-4" />
+        </button>
+      </div>
   </div>
   <!-- Mobile: Menu button on right side of first row -->
   <div class="md:hidden relative col-span-1 justify-self-end">
@@ -242,7 +292,11 @@ onClickOutside(menuRef, () => {
   <!-- Color shades -->
   <Tooltip v-for="step in COLOR_STEPS" :key="step" :text="props.data.colors[step]" position="top">
     <div
-      class="flex-1 aspect-square rounded-sm md:rounded-xl border border-transparent relative group/shade"
+      class="flex-1 aspect-square border border-transparent relative group/shade"
+      :class="{
+        'rounded-t-sm md:rounded-t-xl': previousColors?.[step],
+        'rounded-sm md:rounded-xl': !previousColors?.[step],
+      }"
       :style="includedColors.includes(step)
         ? `background-color: ${props.data.colors[step]}`
         : `background-color: transparent; border-color: ${props.data.colors[step]}`">
@@ -261,7 +315,7 @@ onClickOutside(menuRef, () => {
               ? Object.keys(anchors).length === 1
                 ? 'bg-gray-400 dark:bg-gray-600 text-white cursor-not-allowed'
                 : 'bg-blue-500 text-white hover:bg-blue-600'
-              : 'bg-black/20 dark:bg-white/20 text-white opacity-0 group-hover/shade:opacity-100'
+              : 'bg-black/40 ring-1 ring-white/70 shadow-sm text-white opacity-0 group-hover/shade:opacity-100'
           ]"
           @click="toggleAnchor(step)"
           :title="anchors[step]
@@ -270,7 +324,7 @@ onClickOutside(menuRef, () => {
               : 'Remove anchor'
             : 'Set as anchor color'">
           <IconPin v-if="anchors[step]" class="size-4" />
-          <IconPinOutline v-else class="size-4" />
+          <IconPinOutline v-else class="size-4 drop-shadow-[0_0_1px_rgba(0,0,0,0.8)]" />
         </button>
       </div>
     </div>
@@ -303,6 +357,27 @@ onClickOutside(menuRef, () => {
       </button>
     </div>
   </div>
+
+  <!-- Before/after comparison: the palette as it was before the custom color changes -->
+  <template v-if="previousColors">
+    <div class="col-span-11 md:col-span-2 -mt-1 md:-mt-4 flex items-center justify-between text-xs uppercase text-gray-500 dark:text-gray-400">
+      <span>Before</span>
+      <button class="rounded hocus:text-black dark:hocus:text-white"
+        :aria-label="showPrevious ? 'Hide previous colors' : 'Show previous colors'"
+        :aria-pressed="showPrevious"
+        :title="showPrevious ? 'Hide previous colors' : 'Show previous colors'"
+        @click="showPrevious = !showPrevious">
+        <IconEye v-if="showPrevious" class="size-4" />
+        <IconEyeOff v-else class="size-4" />
+      </button>
+    </div>
+    <template v-if="showPrevious">
+      <div v-for="step in COLOR_STEPS" :key="`before-${step}`"
+        class="h-4 -mt-1 md:-mt-4 rounded-b-sm md:rounded-b-xl"
+        :style="`background-color: ${previousColors[step]}`"
+        :title="previousColors[step]"></div>
+    </template>
+  </template>
 
   <!-- Color Picker Popup -->
   <Teleport to="#modals">
