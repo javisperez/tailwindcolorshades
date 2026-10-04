@@ -110,11 +110,6 @@ function onColorChange(color: string) {
 function confirmDeletePalette() {
   if (paletteToDelete.value) {
     const paletteIndex = palettes.value.indexOf(paletteToDelete.value)
-    const previousKey = `${PREFERENCES_STORAGE_KEYS.previous}-${paletteToDelete.value.name.toLowerCase()}`
-    try {
-      sessionStorage.removeItem(previousKey)
-      sessionStorage.removeItem(`${previousKey}-visible`)
-    } catch { /* storage unavailable */ }
     palettes.value.splice(paletteIndex, 1)
     const query = generatePalettesQueryString(palettes.value)
     window.history.pushState({}, '', `?${query}`)

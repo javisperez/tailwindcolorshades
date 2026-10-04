@@ -5,5 +5,5 @@ export const PREFERENCES_STORAGE_KEYS = {
   format: 'twcs-preference-color-format',
   theme: 'twcs-preference-theme',
   wrapper: 'twcs-preference-include-wrapper',
-  previous: 'twcs-previous-colors'
+  versions: 'twcs-palette-versions'
 }

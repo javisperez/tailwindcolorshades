@@ -7,6 +7,9 @@ import IconCheck from '~icons/mdi/check'
 import IconCheckAll from '~icons/mdi/check-all'
 import IconChevronUp from '~icons/mdi/chevron-up'
 import IconChevronDown from '~icons/mdi/chevron-down'
+import IconBookmarkPlus from '~icons/mdi/bookmark-plus-outline'
+import IconRestore from '~icons/mdi/backup-restore'
+import IconClose from '~icons/mdi/close'
 import IconEye from '~icons/mdi/eye'
 import IconEyeOff from '~icons/mdi/eye-off'
 import IconPin from '~icons/mdi/pin'
@@ -43,12 +46,15 @@ const emit = defineEmits<{
   (e: 'regenerate', anchors: Record<number, string>): void
 }>()
 
-// Kept in sessionStorage (per palette name) so the comparison survives a page refresh
-const previousStorageKey = `${PREFERENCES_STORAGE_KEYS.previous}-${props.data.name.toLowerCase()}`
-const previousColors = useSessionStorage<Palette['colors'] | null>(previousStorageKey, null, {
+// Saved versions of this palette to compare against. Kept in sessionStorage (per palette name) so they survive a refresh.
+type PaletteVersion = { id: number, label: string, colors: Palette['colors'], anchors: Record<number, string> }
+const MAX_VERSIONS = 5
+const versionsStorageKey = `${PREFERENCES_STORAGE_KEYS.versions}-${props.data.name.toLowerCase()}`
+const versions = useSessionStorage<PaletteVersion[]>(versionsStorageKey, [], {
   serializer: { read: (raw) => JSON.parse(raw), write: (value) => JSON.stringify(value) }
 })
-const showPrevious = useSessionStorage(`${previousStorageKey}-visible`, true)
+const showVersions = useSessionStorage(`${versionsStorageKey}-visible`, true)
+
 const includedColors = ref<ColorStep[]>(Object.keys(props.data.colors).map(s => parseInt(s)) as ColorStep[])
 // Always ensure 500 is pinned with the base color
 const anchors = ref<Record<number, string>>(props.data.anchors || { 500: props.data.colors[500] })
@@ -146,12 +152,39 @@ function stopEditing(evt?: Event) {
   }
 }
 
-// Keep the colors from before the first custom color change, so the user can compare them with the current ones
-function snapshotForCompare() {
-  if (!previousColors.value) {
-    previousColors.value = { ...props.data.colors }
-    showPrevious.value = true
+function saveVersion(label?: string) {
+  if (versions.value.length >= MAX_VERSIONS) {
+    return
   }
+
+  const id = Math.max(0, ...versions.value.map(version => version.id)) + 1
+  versions.value = [...versions.value, {
+    id,
+    label: label ?? `Version ${id}`,
+    colors: { ...props.data.colors },
+    anchors: { ...anchors.value }
+  }]
+  showVersions.value = true
+
+  trackInteraction('save_version', 'click')
+}
+
+// The first custom color change keeps the original palette around, so there is always something to compare against
+function saveOriginalVersion() {
+  if (versions.value.length === 0) {
+    saveVersion('Original')
+  }
+}
+
+function restoreVersion(version: PaletteVersion) {
+  anchors.value = { ...version.anchors }
+  emit('updateAnchors', anchors.value)
+
+  trackInteraction('restore_version', 'click')
+}
+
+function removeVersion(version: PaletteVersion) {
+  versions.value = versions.value.filter(v => v.id !== version.id)
 }
 
 function toggleAnchor(step: ColorStep) {
@@ -165,8 +198,8 @@ function toggleAnchor(step: ColorStep) {
     // Remove anchor
     const newAnchors = { ...anchors.value };
     delete newAnchors[step];
+    saveOriginalVersion();
     anchors.value = newAnchors;
-    snapshotForCompare();
     emit('updateAnchors', anchors.value);
   } else {
     // Open color picker to set anchor
@@ -179,12 +212,12 @@ function toggleAnchor(step: ColorStep) {
 
 function onColorPickerApply(color: string) {
   if (editingAnchorStep.value !== null) {
+    saveOriginalVersion();
     anchors.value = {
       ...anchors.value,
       [editingAnchorStep.value]: color
     };
 
-    snapshotForCompare();
     emit('updateAnchors', anchors.value);
 
     // Track anchor color change
@@ -227,6 +260,17 @@ onClickOutside(menuRef, () => {
     </template>
     <div v-if="!isEditing" class="flex ml-2 flex-row items-center text-gray-400 dark:text-gray-500">
         <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
+          :disabled="versions.length >= MAX_VERSIONS"
+          aria-label="Save this version to compare" title="Save this version to compare" @click="saveVersion()">
+          <IconBookmarkPlus class="size-4" />
+        </button>
+        <button v-if="versions.length" class="rounded hocus:text-black dark:hocus:text-white"
+          :aria-pressed="showVersions"
+          :aria-label="showVersions ? 'Hide saved versions' : 'Show saved versions'"
+          :title="showVersions ? 'Hide saved versions' : 'Show saved versions'" @click="showVersions = !showVersions">
+          <component :is="showVersions ? IconEye : IconEyeOff" class="size-4" />
+        </button>
+        <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
           :disabled="props.isFirst" aria-label="Move palette up" title="Move up" @click="movePalette(-1)">
           <IconChevronUp class="size-4" />
         </button>
@@ -251,6 +295,17 @@ onClickOutside(menuRef, () => {
       <span class="flex-1">{{ colorName }}</span>
     </template>
     <div v-if="!isEditing" class="flex flex-col items-center text-gray-400 dark:text-gray-500">
+        <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
+          :disabled="versions.length >= MAX_VERSIONS"
+          aria-label="Save this version to compare" title="Save this version to compare" @click="saveVersion()">
+          <IconBookmarkPlus class="size-4" />
+        </button>
+        <button v-if="versions.length" class="rounded hocus:text-black dark:hocus:text-white"
+          :aria-pressed="showVersions"
+          :aria-label="showVersions ? 'Hide saved versions' : 'Show saved versions'"
+          :title="showVersions ? 'Hide saved versions' : 'Show saved versions'" @click="showVersions = !showVersions">
+          <component :is="showVersions ? IconEye : IconEyeOff" class="size-4" />
+        </button>
         <button class="rounded hocus:text-black dark:hocus:text-white disabled:opacity-30 disabled:pointer-events-none"
           :disabled="props.isFirst" aria-label="Move palette up" title="Move up" @click="movePalette(-1)">
           <IconChevronUp class="size-4" />
@@ -293,10 +348,7 @@ onClickOutside(menuRef, () => {
   <Tooltip v-for="step in COLOR_STEPS" :key="step" :text="props.data.colors[step]" position="top">
     <div
       class="flex-1 aspect-square border border-transparent relative group/shade"
-      :class="{
-        'rounded-t-sm md:rounded-t-xl': previousColors?.[step],
-        'rounded-sm md:rounded-xl': !previousColors?.[step],
-      }"
+      :class="showVersions && versions.length ? 'rounded-t-sm md:rounded-t-xl' : 'rounded-sm md:rounded-xl'"
       :style="includedColors.includes(step)
         ? `background-color: ${props.data.colors[step]}`
         : `background-color: transparent; border-color: ${props.data.colors[step]}`">
@@ -358,24 +410,27 @@ onClickOutside(menuRef, () => {
     </div>
   </div>
 
-  <!-- Before/after comparison: the palette as it was before the custom color changes -->
-  <template v-if="previousColors">
-    <div class="col-span-11 md:col-span-2 -mt-1 md:-mt-4 flex items-center justify-between text-xs uppercase text-gray-500 dark:text-gray-400">
-      <span>Before</span>
-      <button class="rounded hocus:text-black dark:hocus:text-white"
-        :aria-label="showPrevious ? 'Hide previous colors' : 'Show previous colors'"
-        :aria-pressed="showPrevious"
-        :title="showPrevious ? 'Hide previous colors' : 'Show previous colors'"
-        @click="showPrevious = !showPrevious">
-        <IconEye v-if="showPrevious" class="size-4" />
-        <IconEyeOff v-else class="size-4" />
-      </button>
-    </div>
-    <template v-if="showPrevious">
-      <div v-for="step in COLOR_STEPS" :key="`before-${step}`"
-        class="h-4 -mt-1 md:-mt-4 rounded-b-sm md:rounded-b-xl"
-        :style="`background-color: ${previousColors[step]}`"
-        :title="previousColors[step]"></div>
+  <!-- Saved versions to compare with the current palette -->
+  <template v-if="showVersions">
+    <template v-for="(version, index) in versions" :key="version.id">
+      <div class="col-span-11 md:col-span-2 -mt-1 md:-mt-4 flex items-center justify-between text-xs uppercase text-gray-500 dark:text-gray-400">
+        <span class="truncate">{{ version.label }}</span>
+        <div class="flex items-center gap-1">
+          <button class="rounded hocus:text-black dark:hocus:text-white"
+            :aria-label="`Use ${version.label}`" :title="`Use ${version.label}`" @click="restoreVersion(version)">
+            <IconRestore class="size-4" />
+          </button>
+          <button class="rounded hocus:text-black dark:hocus:text-white"
+            :aria-label="`Remove ${version.label}`" :title="`Remove ${version.label}`" @click="removeVersion(version)">
+            <IconClose class="size-4" />
+          </button>
+        </div>
+      </div>
+      <div v-for="step in COLOR_STEPS" :key="`${version.id}-${step}`"
+        class="h-5 -mt-1 md:-mt-4"
+        :class="index === versions.length - 1 ? 'rounded-b-sm md:rounded-b-xl' : ''"
+        :style="`background-color: ${version.colors[step]}`"
+        :title="version.colors[step]"></div>
     </template>
   </template>
 
