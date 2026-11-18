@@ -1,479 +1,292 @@
 <script setup lang="ts">
-import ColorPicker from '@/components/ColorPicker.vue'
-import { useClipboard, useLocalStorage } from '@vueuse/core'
-import IconGithub from '~icons/mdi/github'
-import IconGear from '~icons/mdi/gear'
+import { computed, ref, watch, watchEffect } from 'vue'
+import { useClipboard } from '@vueuse/core'
 import IconCopy from '~icons/mdi/content-copy'
-import IconClose from '~icons/mdi/close'
-import IconUpload from '~icons/mdi/upload'
-import IconFileUpload from '~icons/mdi/file-upload'
-import { generateColorScale } from '@/services/colors'
-import { COLOR_STEPS, PREFERENCES_STORAGE_KEYS } from '@/constants'
-import { computed, ref, watchEffect } from 'vue'
-import ColorPalette, { type Palette } from './components/ColorPalette.vue'
-import { generatePaletteFromColor, generateColorName } from '@/services/colors'
-import { generatePalettesQueryString } from '@/services/utils'
-import useSource from '@/composables/source'
-import EmptyState from '@/components/EmptyState.vue'
-import PreferencePanel from './components/PreferencePanel.vue'
 import IconCheck from '~icons/mdi/check'
-import { parseConfig } from '@/services/import'
-import { trackColorEvent, trackInteraction, trackError } from '@/services/analytics'
+import AppHeader from '@/components/AppHeader.vue'
+import AppFooter from '@/components/AppFooter.vue'
+import BaseModal from '@/components/BaseModal.vue'
+import ColorPalette, { type Palette } from '@/components/ColorPalette.vue'
+import DonateNudge from '@/components/DonateNudge.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import ExportPanel from '@/components/ExportPanel.vue'
+import ImportModal from '@/components/ImportModal.vue'
+import LivePreview from '@/components/LivePreview.vue'
+import useSource from '@/composables/source'
+import { setAmbient } from '@/composables/ambient'
+import { useDonations } from '@/composables/donations'
+import { usePreferences } from '@/composables/preferences'
+import { COLOR_STEPS } from '@/constants'
+import { generateColorName, generateColorScale, generatePaletteFromColor } from '@/services/colors'
+import { generatePalettesQueryString } from '@/services/utils'
+import { trackColorEvent, trackInteraction } from '@/services/analytics'
 
-type OklchString = `oklch(${number} ${number} ${number})`
 type ColorStep = (typeof COLOR_STEPS)[number]
-type HexString = `#${string}`
 
-const queryString = new URLSearchParams(window.location.search)
-// Update the `currentTheme` based on the user's system preference
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-const systemTheme = mediaQuery.matches ? 'dark' : 'light'
-
-const { copy: copyToClipboard, copied: isCopied } = useClipboard()
-const configVersion = useLocalStorage(PREFERENCES_STORAGE_KEYS.version, 'v4')
-const configFormat = useLocalStorage(PREFERENCES_STORAGE_KEYS.format, 'oklch')
-const includeWrapper = useLocalStorage(PREFERENCES_STORAGE_KEYS.wrapper, false)
-const appTheme = useLocalStorage(PREFERENCES_STORAGE_KEYS.theme, systemTheme)
+const { version: configVersion, format: configFormat, wrapper: includeWrapper, theme, contrast: showContrast } = usePreferences()
+const { registerCopy } = useDonations()
+const { copy: copyToClipboard, copied: isCopied } = useClipboard({ copiedDuring: 1800 })
 
 const palettes = ref<Palette[]>([])
-const isOptionsSideOpen = ref(false)
-const selectedColor = ref<OklchString | HexString | ''>('')
-const paletteToDelete = ref<Palette | null>(null)
 const includedColorsPerPalette = ref<Map<string, ColorStep[]>>(new Map())
+const paletteToDelete = ref<Palette | null>(null)
 const isImportModalOpen = ref(false)
-const importConfigText = ref('')
-const importError = ref('')
+const hasCopied = ref(false)
 
 const currentNames = computed(() => palettes.value.map(palette => palette.name))
+new URLSearchParams(window.location.search).forEach((value, name) => {
+  try {
+    let colors: Record<number, string>
+    let anchors: Record<number, string> | undefined
 
-queryString.forEach((value, key) => {
-  const name = key
-  let colors: Record<number, string>
-  let anchors: Record<number, string> | undefined
+    if (value.includes(':')) {
+      // Anchor format: "700:#ff0000" or "200:#ff0000,500:#00ff00,800:#0000ff"
+      anchors = {}
+      value.split(',').forEach(pair => {
+        const [step, color] = pair.split(':')
+        if (step && color) {
+          anchors![parseInt(step)] = color
+        }
+      })
 
-  // Check if the value contains anchor format (step:color or step:color,step:color)
-  if (value.includes(':')) {
-    // Parse anchor format: "700:#ff0000" or "200:#ff0000,500:#00ff00,800:#0000ff"
-    anchors = {}
-    const pairs = value.split(',')
-    pairs.forEach(pair => {
-      const [step, color] = pair.split(':')
-      if (step && color) {
-        anchors![parseInt(step)] = color
-      }
-    })
+      // Base color for generation: 500 when available, otherwise the first anchor
+      colors = generateColorScale(anchors[500] || Object.values(anchors)[0], anchors)
+    } else {
+      colors = generateColorScale(value)
+    }
 
-    // Get base color for generation (use 500 if available, otherwise first anchor)
-    const baseColor = anchors[500] || Object.values(anchors)[0]
-    colors = generateColorScale(baseColor, anchors)
-  } else {
-    // Simple single-color format
-    colors = generateColorScale(value)
+    palettes.value.push({ name, colors, ...(anchors && { anchors }) })
+    includedColorsPerPalette.value.set(name, Object.keys(colors).map(s => parseInt(s)) as ColorStep[])
+  } catch {
+    // A color in the link could not be read: skip that palette instead of breaking the page
   }
+})
 
-  palettes.value.push({
-    name,
-    colors,
-    ...(anchors && { anchors })
+const source = useSource(palettes.value, configVersion, configFormat, includedColorsPerPalette, includeWrapper)
+function syncUrl() {
+  window.history.pushState({}, '', `?${generatePalettesQueryString(palettes.value)}`)
+}
+
+const isNameTaken = (name: string, names: string[]) => names.some(n => n.toLowerCase() === name.toLowerCase())
+
+// Adds palettes at the top of the list, keeping their order and making every name unique.
+function addPalettes(incoming: Palette[]) {
+  const added: Palette[] = []
+
+  incoming.forEach((palette) => {
+    const names = [...currentNames.value, ...added.map(p => p.name)]
+    const finalPalette = isNameTaken(palette.name, names)
+      ? { ...palette, name: generateColorName(palette.colors[500], names) }
+      : palette
+
+    added.push(finalPalette)
+    includedColorsPerPalette.value.set(finalPalette.name, Object.keys(finalPalette.colors).map(s => parseInt(s)) as ColorStep[])
   })
 
-  includedColorsPerPalette.value.set(
-    palettes.value[palettes.value.length - 1].name,
-    Object.keys(colors).map(s => parseInt(s)) as ColorStep[]
-  );
-});
-
-const source = useSource(palettes.value, configVersion as any, configFormat as any, includedColorsPerPalette, includeWrapper)
+  palettes.value.unshift(...added)
+  syncUrl()
+}
 
 function onColorChange(color: string) {
-  let palette = generatePaletteFromColor(color)
-  // Ensure the palette name is unique
-  if (currentNames.value.includes(palette.name)) {
-    palette = {
-      ...palette,
-      name: generateColorName(color, currentNames.value)
-    }
-  }
-  palettes.value.unshift(palette)
-  // Update URL with new palette
-  const query = generatePalettesQueryString(palettes.value)
-  window.history.pushState({}, '', `?${query}`)
+  addPalettes([generatePaletteFromColor(color)])
 
-  // Track palette generation
   trackColorEvent('generate', {
     color_value: color,
-    config_version: configVersion.value as 'v3' | 'v4',
-    color_format: configFormat.value as 'hex' | 'oklch'
+    config_version: configVersion.value,
+    color_format: configFormat.value
   })
 }
 
-function confirmDeletePalette() {
-  if (paletteToDelete.value) {
-    const paletteIndex = palettes.value.indexOf(paletteToDelete.value)
-    palettes.value.splice(paletteIndex, 1)
-    const query = generatePalettesQueryString(palettes.value)
-    window.history.pushState({}, '', `?${query}`)
-    paletteToDelete.value = null
+function onUseSample(samplePalettes: Palette[], sampleName: string) {
+  addPalettes(samplePalettes)
+  trackColorEvent('generate', { color_value: sampleName })
+}
 
-    // Track palette deletion
-    trackInteraction('delete_palette', 'click')
+function onImport(imported: Palette[], version?: 'v3' | 'v4') {
+  addPalettes(imported)
+  trackColorEvent('import', { shade_count: imported.length, config_version: version })
+  isImportModalOpen.value = false
+}
+
+function confirmDeletePalette() {
+  if (!paletteToDelete.value) {
+    return
   }
+
+  const index = palettes.value.indexOf(paletteToDelete.value)
+  includedColorsPerPalette.value.delete(paletteToDelete.value.name)
+  palettes.value.splice(index, 1)
+  paletteToDelete.value = null
+  syncUrl()
+
+  trackInteraction('delete_palette', 'click')
 }
 
 function onPaletteMove(palette: Palette, direction: -1 | 1) {
   const from = palettes.value.indexOf(palette)
   const to = from + direction
-  if (from < 0 || to < 0 || to >= palettes.value.length) return
+  if (from < 0 || to < 0 || to >= palettes.value.length) {
+    return
+  }
 
   const [moved] = palettes.value.splice(from, 1)
   palettes.value.splice(to, 0, moved)
-
-  const query = generatePalettesQueryString(palettes.value)
-  window.history.pushState({}, '', `?${query}`)
+  syncUrl()
 
   trackInteraction('move_palette', 'click')
 }
 
 function onPaletteUpdate(palette: Palette, data: { includedColors: ColorStep[], name: string }) {
-  const paletteIndex = palettes.value.indexOf(palette)
-  palettes.value[paletteIndex].name = data.name
-  includedColorsPerPalette.value.set(data.name, data.includedColors)
+  const index = palettes.value.indexOf(palette)
+  const otherNames = currentNames.value.filter((_, i) => i !== index)
+  // Renaming to a name another palette already uses would merge them in the export: keep the old one
+  const name = data.name !== palette.name && isNameTaken(data.name, otherNames) ? palette.name : data.name
 
-  const query = generatePalettesQueryString(palettes.value)
-  window.history.pushState({}, '', `?${query}`)
+  includedColorsPerPalette.value.delete(palette.name)
+  includedColorsPerPalette.value.set(name, data.includedColors)
+  palettes.value[index].name = name
+  syncUrl()
 }
 
 function onPaletteAnchorsUpdate(palette: Palette, anchors: Record<number, string>) {
-  const paletteIndex = palettes.value.indexOf(palette)
+  const index = palettes.value.indexOf(palette)
 
-  // Ensure at least one anchor exists - if all removed, keep 500 as default
+  // Ensure at least one anchor exists: if all were removed, keep 500 as the default
   if (Object.keys(anchors).length === 0) {
     anchors = { 500: palette.colors[500] }
   }
 
-  // Get the base color (use 500 if available, otherwise first anchor)
+  // Base color: 500 when available, otherwise the first anchor
   const baseColor = anchors[500] || palette.colors[500] || Object.values(anchors)[0]
 
-  // Regenerate the palette with the new anchors
-  const newColors = generateColorScale(baseColor, anchors)
-
-  // Update the palette
-  palettes.value[paletteIndex] = {
+  palettes.value[index] = {
     ...palette,
-    colors: newColors,
+    colors: generateColorScale(baseColor, anchors),
     anchors
   }
+  syncUrl()
 
-  const query = generatePalettesQueryString(palettes.value)
-  window.history.pushState({}, '', `?${query}`)
-
-  // Track anchor update
   trackColorEvent('update_anchors', {
     anchor_count: Object.keys(anchors).length,
-    config_version: configVersion.value as 'v3' | 'v4',
-    color_format: configFormat.value as 'hex' | 'oklch'
+    config_version: configVersion.value,
+    color_format: configFormat.value
   })
 }
 
-function onPaletteRegenerate(palette: Palette, anchors: Record<number, string>) {
-  const paletteIndex = palettes.value.indexOf(palette)
+function copyConfig() {
+  copyToClipboard(source.value)
+  hasCopied.value = true
+  registerCopy()
 
-  // Get the base color (use 500 if available, otherwise closest to 500)
-  const baseColor = anchors[500] || palette.colors[500] || Object.values(anchors)[0]
-
-  // Regenerate using the original algorithm (force white/black mixing with proper intensities)
-  const newColors = generateColorScale(baseColor, anchors, true)
-
-  // Update the palette
-  palettes.value[paletteIndex] = {
-    ...palette,
-    colors: newColors,
-    anchors
-  }
-
-  const query = generatePalettesQueryString(palettes.value)
-  window.history.pushState({}, '', `?${query}`)
-
-  // Track regeneration
-  trackColorEvent('update_anchors', {
-    anchor_count: Object.keys(anchors).length,
-    config_version: configVersion.value as 'v3' | 'v4',
-    color_format: configFormat.value as 'hex' | 'oklch'
+  trackColorEvent('copy', {
+    shade_count: palettes.value.length,
+    color_format: configFormat.value,
+    config_version: configVersion.value
   })
 }
-
-function handleImportConfig() {
-  importError.value = ''
-
-  const result = parseConfig(importConfigText.value)
-
-  if (result.error) {
-    importError.value = result.error
-    // Track import error
-    trackError('import_config_parse_error', result.error)
-    return
-  }
-
-  // Add imported palettes, ensuring unique names
-  result.palettes.forEach((palette) => {
-    let finalPalette = palette;
-    if (currentNames.value.includes(palette.name)) {
-      finalPalette = {
-        ...palette,
-        name: generateColorName(palette.colors[500], currentNames.value)
-      };
-    }
-    palettes.value.unshift(finalPalette)
-
-    // Initialize included colors for the new palette
-    includedColorsPerPalette.value.set(
-      finalPalette.name,
-      Object.keys(finalPalette.colors).map(s => parseInt(s)) as ColorStep[]
-    )
-  })
-
-  // Update URL with new palettes
-  const query = generatePalettesQueryString(palettes.value)
-  window.history.pushState({}, '', `?${query}`)
-
-  // Track successful import
-  trackColorEvent('import', {
-    shade_count: result.palettes.length,
-    config_version: result.version
-  })
-
-  // Close modal and reset
-  isImportModalOpen.value = false
-  importConfigText.value = ''
-}
-
-function handleFileUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-
-  if (!file) {
-    return
-  }
-
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const content = e.target?.result as string
-    const fileName = file.name.toLowerCase()
-
-    // Extract relevant part based on file extension
-    if (fileName.endsWith('.css')) {
-      // Extract @theme section for v4 CSS files
-      const themeMatch = content.match(/@theme\s*\{[\s\S]*?\n\}/m)
-      importConfigText.value = themeMatch ? themeMatch[0] : content
-    } else if (fileName.endsWith('.js') || fileName.endsWith('.cjs') || fileName.endsWith('.mjs')) {
-      // Extract colors object from JS/CJS config files
-      // Look for colors: { ... } or export default { colors: { ... } }
-      const colorsMatch = content.match(/colors\s*:\s*\{([\s\S]*?)\n\s*\}(?:\s*,|\s*\})/m)
-      if (colorsMatch) {
-        importConfigText.value = `{${colorsMatch[1]}\n}`
-      } else {
-        importConfigText.value = content
-      }
-    } else {
-      // For .json or .txt, use the whole content
-      importConfigText.value = content
-    }
-  }
-  reader.readAsText(file)
-
-  // Reset input so the same file can be selected again
-  input.value = ''
-}
-
 watchEffect(() => {
-  // apply an data-theme attribute to the html tag
-  document.documentElement.setAttribute('data-theme', appTheme.value)
+  document.documentElement.setAttribute('data-theme', theme.value)
 })
+
+// The page glows in the color of the palette on top. (The hero cycles its own colors while empty.)
+watch(() => palettes.value[0]?.colors, (colors) => setAmbient(colors ?? null), { immediate: true })
+
+const legend = [
+  { label: 'AAA', hint: '7+' },
+  { label: 'AA', hint: '4.5+' },
+  { label: 'AA Lg', hint: '3+' },
+  { label: 'Fail', hint: '<3' }
+]
 </script>
 
 <template>
-<main class="min-h-screen flex flex-col relative">
-  <header class="grid grid-cols-1 lg:grid-cols-3 items-center gap-4 py-3 px-4 relative">
-    <div class="logo flex items-center justify-between lg:justify-start">
-      <a href="/" class="inline-flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400" aria-label="home">
-        <svg class="size-8" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g>
-            <rect x="14" y="0" width="50" height="12" rx="6" fill="#DBEAFE" />
-            <rect x="9" y="17" width="50" height="12" rx="6" fill="#60A5FA" />
-            <rect x="5" y="34" width="50" height="12" rx="6" fill="#3B82F6" />
-            <rect x="0" y="51" width="50" height="12" rx="6" fill="#1E3A8A" />
-          </g>
-        </svg>
+<div class="ambient" aria-hidden="true"></div>
 
-        <span class="font-bold text-lg">Tailwind Color Shades</span>
-      </a>
+<div class="flex min-h-dvh flex-col">
+  <AppHeader :has-palettes="palettes.length > 0" @generate="onColorChange" @import="isImportModalOpen = true" />
 
-      <div class="flex lg:hidden items-center gap-3">
-        <button @click="isOptionsSideOpen = !isOptionsSideOpen; trackInteraction('preferences_panel_toggle', 'click')">
-          <IconGear class="size-6 transition-transform" :class="{
-            'rotate-30': isOptionsSideOpen,
-          }" />
-        </button>
-        <a href="https://github.com/javisperez/tailwindcolorshades" target="_blank">
-          <IconGithub class="size-6" />
-        </a>
-      </div>
-    </div>
-    <div class="w-full">
-      <ColorPicker class="mx-auto" v-model="selectedColor"
-        @change="onColorChange" />
-    </div>
-    <div class="flex items-center justify-center lg:justify-end gap-2 xl:gap-4 flex-wrap md:flex-nowrap">
-      <button class="whitespace-nowrap button button-borderless text-xs bg-gray-200 rounded-4xl px-3 gap-2"
-        @click="isImportModalOpen = true; trackInteraction('import_modal_open', 'click')">
-        <IconUpload class="size-4" />
-        <span>Import config</span>
-      </button>
-      <button class="whitespace-nowrap button button-borderless text-xs bg-gray-200 rounded-4xl px-3 gap-2"
-        @click="copyToClipboard(source); trackColorEvent('copy', { shade_count: palettes.length, color_format: configFormat as 'hex' | 'oklch', config_version: configVersion as 'v3' | 'v4' })">
-        <Component :is="!isCopied ? IconCopy : IconCheck" class="size-4" />
-        <span>{{ isCopied ? 'Copied!' : 'Copy config' }}</span>
-      </button>
-      <!-- Desktop: Settings and GitHub icons -->
-      <button class="hidden lg:block" @click="isOptionsSideOpen = !isOptionsSideOpen; trackInteraction('preferences_panel_toggle', 'click')">
-        <IconGear class="size-6 transition-transform" :class="{
-          'rotate-30': isOptionsSideOpen,
-        }" />
-      </button>
-      <a href="https://github.com/javisperez/tailwindcolorshades" target="_blank" class="hidden lg:block">
-        <IconGithub class="size-6" />
-      </a>
-    </div>
-  </header>
+  <main class="flex-1">
+    <EmptyState v-if="!palettes.length" class="pb-8" @generate="onColorChange" @use-palettes="onUseSample" />
 
-  <section class="xl:container xl:mx-auto flex-1">
-    <template v-if="!palettes.length">
-      <EmptyState class="mt-12 mb-48" />
-    </template>
+    <div v-else class="mx-auto grid max-w-[1400px] items-start gap-x-6 gap-y-10 px-4 py-6 pb-28 grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_400px] xl:px-6 xl:pb-10">
+      <section class="xl:col-start-1" aria-label="Palettes">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div>
+            <h1 class="font-display text-2xl font-extrabold tracking-tight">Your palettes</h1>
+            <p class="mt-1 text-sm text-muted">Click a shade to copy it. Pin shades (<span class="whitespace-nowrap">on desktop</span>) to steer the scale.</p>
+          </div>
 
-    <template v-else>
-      <div>
-        <div class="grid palette-grid px-2 mt-14 h-16 py-6 sticky top-0 z-1 bg-white dark:bg-gray-900 dark:text-gray-300 gap-1 md:gap-4 items-center">
-          <div class="hidden md:block md:col-span-2"></div>
-          <div v-for="step in COLOR_STEPS" :key="step" class="text-center [writing-mode:vertical-lr] md:[writing-mode:horizontal-tb]">{{ step }}</div>
+          <div class="flex items-center gap-2 text-xs text-muted">
+            <template v-if="showContrast">
+              <span v-for="item in legend" :key="item.label" class="rounded-md border border-line bg-panel px-1.5 py-0.5 font-semibold"
+                title="WCAG contrast of the better text color (white or black) on each shade">
+                <span class="text-ink">{{ item.label }}</span> <span class="font-normal text-faint">{{ item.hint }}</span>
+              </span>
+            </template>
+            <label class="flex items-center gap-2 font-medium">
+              Contrast
+              <input v-model="showContrast" type="checkbox" class="switch" aria-label="Show WCAG contrast badges on each shade" />
+            </label>
+          </div>
         </div>
-        <TransitionGroup tag="div" move-class="transition-transform duration-300 ease-in-out">
+
+        <TransitionGroup tag="div" class="relative flex flex-col gap-4"
+          enter-active-class="transition duration-300"
+          enter-from-class="-translate-y-3 scale-[0.98] opacity-0"
+          leave-active-class="absolute inset-x-0 transition duration-150"
+          leave-to-class="scale-95 opacity-0"
+          move-class="transition-transform duration-300 ease-in-out">
           <ColorPalette
             v-for="(palette, index) in palettes"
             :key="palette.name"
             :data="palette"
+            :included-colors="includedColorsPerPalette.get(palette.name)"
             :is-first="index === 0"
             :is-last="index === palettes.length - 1"
             @move="onPaletteMove(palette, $event)"
             @update="onPaletteUpdate(palette, $event)"
             @update-anchors="onPaletteAnchorsUpdate(palette, $event)"
-            @regenerate="onPaletteRegenerate(palette, $event)"
-            @delete="($event: Palette) => paletteToDelete = $event"
+            @delete="paletteToDelete = $event"
           />
         </TransitionGroup>
-      </div>
-    </template>
-  </section>
+      </section>
 
-  <transition
-    enter-active-class="transition"
-    leave-active-class="transition"
-    enter-from-class="opacity-0 transform translate-x-full"
-    enter-to-class="opacity-100 transform translate-x-0"
-    leave-from-class="opacity-100 transform translate-x-0"
-    leave-to-class="opacity-0 transform translate-x-full">
-    <aside v-if="isOptionsSideOpen" class="absolute right-0 w-80 inset-y-0 shadow-lg bg-gray-50 dark:bg-gray-800 p-4 z-10">
-      <div class="flex justify-between items-center">
-        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-300">Preferences</h2>
+      <aside class="xl:sticky xl:top-20 xl:col-start-2 xl:row-span-2 xl:row-start-1" aria-label="Export">
+        <ExportPanel :source="source" :palette-count="palettes.length" :copied="isCopied" :has-copied="hasCopied" @copy="copyConfig" />
+      </aside>
 
-        <button aria-label="close-preferences-panel"
-          class="button button-borderless text-gray-500 hocus:text-black hocus:dark:text-white"
-          @click="isOptionsSideOpen = false">
-          <IconClose class="size-6" />
-        </button>
-      </div>
-
-      <PreferencePanel class="mt-10 space-y-6" />
-    </aside>
-  </transition>
-</main>
-
-<Teleport to="#modals">
-<template v-if="Boolean(paletteToDelete)">
-  <div class="fixed inset-0 dark:bg-black/40 bg-white/40 backdrop-blur-[2px] flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-96">
-      <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-        Delete Palette
-      </h3>
-      <p class="mb-6 text-gray-700 dark:text-gray-300">
-        Are you sure you want to delete the palette <span class="font-bold">{{ paletteToDelete?.name }}</span>?
-      </p>
-      <div class="flex justify-end gap-3">
-        <button
-          class="button button-borderless px-4 py-2 rounded text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-          @click="paletteToDelete = null">
-          Cancel
-        </button>
-        <button
-          class="button bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          @click="confirmDeletePalette">
-          Delete
-        </button>
+      <div class="xl:col-start-1">
+        <LivePreview :palettes="palettes" />
       </div>
     </div>
+  </main>
+
+  <AppFooter />
+</div>
+
+<!-- Mobile: the export panel is far down the page, so copying stays one tap away -->
+<div v-if="palettes.length" class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas/85 p-3 backdrop-blur-xl xl:hidden">
+  <div class="mx-auto flex max-w-lg gap-2">
+    <button type="button" class="button button-primary h-11 flex-1" @click="copyConfig">
+      <component :is="isCopied ? IconCheck : IconCopy" class="size-4" />
+      {{ isCopied ? 'Copied!' : 'Copy config' }}
+    </button>
   </div>
-</template>
+</div>
 
-<template v-if="isImportModalOpen">
-  <div class="fixed inset-0 dark:bg-black/40 bg-white/40 backdrop-blur-[2px] flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-[600px] max-w-[90vw]">
-      <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-        Import Config
-      </h3>
-      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        Paste your Tailwind CSS v3 (JSON) or v4 (CSS vars) config, or upload a file.
-      </p>
+<DonateNudge />
 
-      <div class="mb-4">
-        <textarea
-          v-model="importConfigText"
-          class="w-full h-64 p-3 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Paste config here...&#10;&#10;Example v4:&#10;@theme {&#10;  --color-primary-500: #3b82f6;&#10;}&#10;&#10;Example v3:&#10;{&#10;  'primary': {&#10;    '500': '#3b82f6'&#10;  }&#10;}"
-        ></textarea>
-      </div>
-
-      <div class="mb-4">
-        <label class="button button-borderless bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 rounded cursor-pointer inline-flex items-center gap-2">
-          <IconFileUpload class="size-5" />
-          Import from file
-          <input
-            type="file"
-            accept=".css,.cjs,.mjs,.js,.json,.txt"
-            class="hidden"
-            @change="handleFileUpload"
-          />
-        </label>
-      </div>
-
-      <div v-if="importError" class="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-red-800 dark:text-red-300 text-sm">
-        {{ importError }}
-      </div>
-
-      <div class="flex justify-end gap-3">
-        <button
-          class="button button-borderless px-4 py-2 rounded text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-          @click="isImportModalOpen = false; importConfigText = ''; importError = ''">
-          Cancel
-        </button>
-        <button
-          class="button bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!importConfigText.trim()"
-          @click="handleImportConfig">
-          Import
-        </button>
-      </div>
+<BaseModal v-if="paletteToDelete" title="Delete palette" size="max-w-sm" @close="paletteToDelete = null">
+  <div class="p-5">
+    <p class="text-sm leading-relaxed text-muted">
+      Remove <strong class="text-ink">{{ paletteToDelete.name }}</strong> from your export and the share link?
+    </p>
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button" class="button button-ghost" @click="paletteToDelete = null">Cancel</button>
+      <button type="button" class="button bg-red-600 text-white hover:bg-red-700" @click="confirmDeletePalette">Delete</button>
     </div>
   </div>
-</template>
-</Teleport>
+</BaseModal>
+
+<ImportModal v-if="isImportModalOpen" @close="isImportModalOpen = false" @import="onImport" />
 </template>

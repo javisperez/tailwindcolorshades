@@ -22,6 +22,10 @@ The goal is to simplify the process of creating custom color scales that maintai
 - **Import Existing Configs**: Load and modify your existing Tailwind color configurations
 - **URL Sharing**: Share your palettes via URL parameters
 - **Selective Export**: Choose which shade levels to include in your config
+- **WCAG Contrast Badges**: Every shade shows its AA / AAA rating for the better of white or black text, with both ratios on hover
+- **Live UI Preview**: See your palette on real components (nav, form, alert, chart) in light and dark mode, with contrast checks
+- **Type Any Color**: Paste hex, `rgb()`, `hsl()`, `oklch()` or a color name, or use the visual picker
+- **Light & Dark Theme**: The whole UI follows your system preference and takes on the color of your palette
 
 ## How to Use
 
