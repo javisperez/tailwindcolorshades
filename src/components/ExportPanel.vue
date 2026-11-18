@@ -5,7 +5,6 @@ import IconCopy from '~icons/mdi/content-copy'
 import IconCheck from '~icons/mdi/check'
 import IconShare from '~icons/mdi/share-variant-outline'
 import SegmentedControl from './SegmentedControl.vue'
-import DonateButton from './DonateButton.vue'
 import { usePreferences } from '@/composables/preferences'
 import { highlightConfig } from '@/services/highlight'
 import { trackInteraction } from '@/services/analytics'
@@ -15,8 +14,6 @@ const props = defineProps<{
   paletteCount: number
   // The copy just happened (briefly true)
   copied: boolean
-  // The user copied at least once in this session: time to say thanks
-  hasCopied: boolean
 }>()
 
 const emit = defineEmits<{ (e: 'copy'): void }>()
@@ -99,12 +96,6 @@ function onCopyLink() {
         <component :is="linkCopied ? IconCheck : IconShare" class="size-4" />
         {{ linkCopied ? 'Link copied!' : 'Copy share link' }}
       </button>
-    </div>
-
-    <!-- Ask after the win -->
-    <div v-if="hasCopied" class="animate-pop flex items-center justify-between gap-3 text-xs text-muted">
-      <span>Saved you some time?</span>
-      <DonateButton placement="export" size="sm" />
     </div>
   </section>
 </template>

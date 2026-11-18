@@ -31,7 +31,6 @@ const palettes = ref<Palette[]>([])
 const includedColorsPerPalette = ref<Map<string, ColorStep[]>>(new Map())
 const paletteToDelete = ref<Palette | null>(null)
 const isImportModalOpen = ref(false)
-const hasCopied = ref(false)
 
 const currentNames = computed(() => palettes.value.map(palette => palette.name))
 new URLSearchParams(window.location.search).forEach((value, name) => {
@@ -175,7 +174,6 @@ function onPaletteAnchorsUpdate(palette: Palette, anchors: Record<number, string
 
 function copyConfig(from: CopySource) {
   copyToClipboard(source.value)
-  hasCopied.value = true
   registerCopy()
 
   track('color_copy', {
@@ -254,7 +252,7 @@ const legend = [
       </section>
 
       <aside class="xl:sticky xl:top-20 xl:col-start-2 xl:row-span-2 xl:row-start-1" aria-label="Export">
-        <ExportPanel :source="source" :palette-count="palettes.length" :copied="isCopied" :has-copied="hasCopied" @copy="copyConfig('export_panel')" />
+        <ExportPanel :source="source" :palette-count="palettes.length" :copied="isCopied" @copy="copyConfig('export_panel')" />
       </aside>
 
       <div class="xl:col-start-1">
