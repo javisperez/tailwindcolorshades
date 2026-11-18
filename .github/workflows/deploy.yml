@@ -98,24 +98,8 @@ jobs:
         run: pnpm build
         env:
           NODE_ENV: production
-
-      - name: Inject Google Analytics
-        run: |
-          if [ -f ".ga" ] && [ -n "${{ secrets.GA_TRACKING_ID }}" ]; then
-            echo "Injecting Google Analytics into index.html..."
-            # Read the GA script template and substitute the tracking ID
-            ga_script=$(cat .ga | sed "s/\$GA_TRACKING_ID/${{ secrets.GA_TRACKING_ID }}/g")
-            # Inject the script before the closing </body> tag using a more robust approach
-            awk -v ga="$ga_script" '{
-              if ($0 ~ /<\/body>/) {
-                print ga
-              }
-              print $0
-            }' dist/index.html > dist/tmp.html && mv dist/tmp.html dist/index.html
-            echo "Google Analytics script injected successfully"
-          else
-            echo "Skipping Google Analytics injection (no .ga file or GA_TRACKING_ID secret)"
-          fi
+          # Injected into the built HTML by pages-analytics. Nothing is injected when it is empty
+          ANALYTICS_ID: ${{ secrets.GA_TRACKING_ID || vars.GA_TRACKING_ID }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
