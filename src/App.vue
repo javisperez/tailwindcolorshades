@@ -19,7 +19,7 @@ import { usePreferences } from '@/composables/preferences'
 import { COLOR_STEPS } from '@/constants'
 import { generateColorName, generateColorScale, generatePaletteFromColor } from '@/services/colors'
 import { generatePalettesQueryString } from '@/services/utils'
-import { trackColorEvent, trackInteraction } from '@/services/analytics'
+import { track, trackInteraction, type ColorSource, type CopySource } from '@/services/analytics'
 
 type ColorStep = (typeof COLOR_STEPS)[number]
 
@@ -62,6 +62,15 @@ new URLSearchParams(window.location.search).forEach((value, name) => {
   }
 })
 
+// Opened with palettes in the link: someone shared it, or this is a reload of your own work
+if (palettes.value.length) {
+  const [navigation] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
+
+  if (navigation?.type !== 'reload') {
+    track('share_link_opened', { palette_count: palettes.value.length })
+  }
+}
+
 const source = useSource(palettes.value, configVersion, configFormat, includedColorsPerPalette, includeWrapper)
 function syncUrl() {
   window.history.pushState({}, '', `?${generatePalettesQueryString(palettes.value)}`)
@@ -87,24 +96,19 @@ function addPalettes(incoming: Palette[]) {
   syncUrl()
 }
 
-function onColorChange(color: string) {
+function onColorChange(color: string, source: ColorSource) {
   addPalettes([generatePaletteFromColor(color)])
-
-  trackColorEvent('generate', {
-    color_value: color,
-    config_version: configVersion.value,
-    color_format: configFormat.value
-  })
+  track('color_generate', { source })
 }
 
-function onUseSample(samplePalettes: Palette[], sampleName: string) {
+function onUseSample(samplePalettes: Palette[]) {
   addPalettes(samplePalettes)
-  trackColorEvent('generate', { color_value: sampleName })
+  track('color_generate', { source: 'sample' })
 }
 
 function onImport(imported: Palette[], version?: 'v3' | 'v4') {
   addPalettes(imported)
-  trackColorEvent('import', { shade_count: imported.length, config_version: version })
+  track('color_import', { palette_count: imported.length, ...(version && { config_version: version }) })
   isImportModalOpen.value = false
 }
 
@@ -119,7 +123,7 @@ function confirmDeletePalette() {
   paletteToDelete.value = null
   syncUrl()
 
-  trackInteraction('delete_palette', 'click')
+  trackInteraction('delete_palette')
 }
 
 function onPaletteMove(palette: Palette, direction: -1 | 1) {
@@ -133,7 +137,7 @@ function onPaletteMove(palette: Palette, direction: -1 | 1) {
   palettes.value.splice(to, 0, moved)
   syncUrl()
 
-  trackInteraction('move_palette', 'click')
+  trackInteraction('move_palette')
 }
 
 function onPaletteUpdate(palette: Palette, data: { includedColors: ColorStep[], name: string }) {
@@ -166,22 +170,20 @@ function onPaletteAnchorsUpdate(palette: Palette, anchors: Record<number, string
   }
   syncUrl()
 
-  trackColorEvent('update_anchors', {
-    anchor_count: Object.keys(anchors).length,
-    config_version: configVersion.value,
-    color_format: configFormat.value
-  })
+  track('color_update_anchors', { anchor_count: Object.keys(anchors).length })
 }
 
-function copyConfig() {
+function copyConfig(from: CopySource) {
   copyToClipboard(source.value)
   hasCopied.value = true
   registerCopy()
 
-  trackColorEvent('copy', {
-    shade_count: palettes.value.length,
+  track('color_copy', {
+    source: from,
+    palette_count: palettes.value.length,
     color_format: configFormat.value,
-    config_version: configVersion.value
+    config_version: configVersion.value,
+    wrapper: includeWrapper.value
   })
 }
 watchEffect(() => {
@@ -252,7 +254,7 @@ const legend = [
       </section>
 
       <aside class="xl:sticky xl:top-20 xl:col-start-2 xl:row-span-2 xl:row-start-1" aria-label="Export">
-        <ExportPanel :source="source" :palette-count="palettes.length" :copied="isCopied" :has-copied="hasCopied" @copy="copyConfig" />
+        <ExportPanel :source="source" :palette-count="palettes.length" :copied="isCopied" :has-copied="hasCopied" @copy="copyConfig('export_panel')" />
       </aside>
 
       <div class="xl:col-start-1">
@@ -267,7 +269,7 @@ const legend = [
 <!-- Mobile: the export panel is far down the page, so copying stays one tap away -->
 <div v-if="palettes.length" class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas/85 p-3 backdrop-blur-xl xl:hidden">
   <div class="mx-auto flex max-w-lg gap-2">
-    <button type="button" class="button button-primary h-11 flex-1" @click="copyConfig">
+    <button type="button" class="button button-primary h-11 flex-1" @click="copyConfig('mobile_bar')">
       <component :is="isCopied ? IconCheck : IconCopy" class="size-4" />
       {{ isCopied ? 'Copied!' : 'Copy config' }}
     </button>

@@ -19,13 +19,13 @@ function createPreferences() {
   const contrast = useLocalStorage(PREFERENCES_STORAGE_KEYS.contrast, false)
 
   // Track every preference change once, wherever it is changed from
-  watch(version, (value) => trackOption('change', { setting_name: 'config_version', setting_value: value }))
-  watch(format, (value) => trackOption('change', { setting_name: 'color_format', setting_value: value }))
-  watch(wrapper, (value) => trackOption('change', { setting_name: 'include_wrapper', setting_value: String(value) }))
-  watch(theme, (value) => trackOption('change', { setting_name: 'theme', setting_value: value }))
+  watch(version, (value) => trackOption({ setting_name: 'config_version', setting_value: value }))
+  watch(format, (value) => trackOption({ setting_name: 'color_format', setting_value: value }))
+  watch(wrapper, (value) => trackOption({ setting_name: 'include_wrapper', setting_value: String(value) }))
+  watch(theme, (value) => trackOption({ setting_name: 'theme', setting_value: value }))
 
-  watch(preview, (value) => trackOption('change', { setting_name: 'show_preview', setting_value: String(value) }))
-  watch(contrast, (value) => trackOption('change', { setting_name: 'show_contrast', setting_value: String(value) }))
+  watch(preview, (value) => trackOption({ setting_name: 'show_preview', setting_value: String(value) }))
+  watch(contrast, (value) => trackOption({ setting_name: 'show_contrast', setting_value: String(value) }))
 
   return { version, format, wrapper, theme, preview, contrast }
 }

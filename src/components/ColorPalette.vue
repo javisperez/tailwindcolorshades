@@ -20,7 +20,7 @@ import ColorPickerPopup from './ColorPickerPopup.vue'
 import BaseModal from './BaseModal.vue'
 import { usePreferences } from '@/composables/preferences'
 import { useDonations } from '@/composables/donations'
-import { trackColorEvent, trackInteraction } from '@/services/analytics'
+import { track, trackInteraction } from '@/services/analytics'
 
 export type Palette = {
   name: string,
@@ -88,9 +88,11 @@ function copySourceToClipboard() {
   copy(source.value)
   registerCopy()
 
-  trackColorEvent('copy', {
+  track('color_copy', {
+    source: 'palette_card',
     color_format: configFormat.value,
     config_version: configVersion.value,
+    wrapper: includeWrapper.value,
     shade_count: includedColors.value.length
   })
 }
@@ -110,7 +112,7 @@ function finishEditing(applyName = true) {
   emit('update', { includedColors: includedColors.value, name })
 
   if (name !== props.data.name) {
-    trackInteraction('rename_palette', 'click')
+    trackInteraction('rename_palette')
   }
 }
 
@@ -119,7 +121,7 @@ function toggleIncludedColor(step: ColorStep) {
     ? includedColors.value.filter(s => s !== step)
     : [...includedColors.value, step]
 
-  trackInteraction('toggle_shade', 'click')
+  trackInteraction('toggle_shade')
 }
 
 function saveVersion(label?: string) {
@@ -136,7 +138,7 @@ function saveVersion(label?: string) {
   }]
   showVersions.value = true
 
-  trackInteraction('save_version', 'click')
+  trackInteraction('save_version')
 }
 
 // The first custom color change keeps the original palette around, so there is always something to compare against
@@ -150,7 +152,7 @@ function restoreVersion(version: PaletteVersion) {
   anchors.value = { ...version.anchors }
   emit('updateAnchors', anchors.value)
 
-  trackInteraction('restore_version', 'click')
+  trackInteraction('restore_version')
 }
 
 function removeVersion(version: PaletteVersion) {
@@ -160,7 +162,7 @@ function removeVersion(version: PaletteVersion) {
 function editAnchor(step: ColorStep) {
   // Open the color picker, on the current color when the shade is already pinned
   editingAnchorStep.value = step
-  trackInteraction('toggle_anchor', 'click')
+  trackInteraction('toggle_anchor')
 }
 
 function removeAnchor() {
@@ -188,11 +190,7 @@ function onColorPickerApply(color: string) {
 
     emit('updateAnchors', anchors.value)
 
-    trackColorEvent('change_anchor', {
-      color_value: color,
-      config_version: configVersion.value,
-      color_format: configFormat.value
-    })
+    track('color_change_anchor')
   }
 
   editingAnchorStep.value = null

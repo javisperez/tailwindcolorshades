@@ -4,6 +4,7 @@ import { onClickOutside, useEventListener } from '@vueuse/core'
 import { formatCss, formatHex, parse, type Color } from 'culori'
 import IconArrowRight from '~icons/mdi/arrow-right'
 import ColorPickerPopup from './ColorPickerPopup.vue'
+import { track, type ColorSource } from '@/services/analytics'
 
 const props = withDefaults(defineProps<{
   size?: 'md' | 'lg'
@@ -12,7 +13,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (e: 'change', color: string): void
+  (e: 'change', color: string, source: ColorSource): void
 }>()
 
 const draft = ref('')
@@ -38,8 +39,8 @@ function normalize(color: Color): string {
   return color.mode === 'rgb' ? formatHex(color) : formatCss(color)
 }
 
-function emitColor(color: string) {
-  emit('change', color)
+function emitColor(color: string, source: ColorSource) {
+  emit('change', color, source)
   draft.value = ''
   isOpen.value = false
   hasError.value = false
@@ -53,10 +54,11 @@ function submit() {
 
   if (!parsed.value) {
     hasError.value = true
+    track('color_input_invalid', { input: draft.value.trim().slice(0, 20) })
     return
   }
 
-  emitColor(normalize(parsed.value))
+  emitColor(normalize(parsed.value), 'typed')
 }
 
 watch(draft, () => {
@@ -105,7 +107,7 @@ useEventListener(document, 'keydown', (event: KeyboardEvent) => {
     </p>
 
     <div v-if="isOpen" class="animate-pop card absolute top-full left-1/2 z-40 mt-2 -translate-x-1/2 shadow-[var(--shadow-pop)]">
-      <ColorPickerPopup :initial-color="swatchColor" @apply="emitColor" @cancel="isOpen = false" />
+      <ColorPickerPopup :initial-color="swatchColor" @apply="emitColor($event, 'picker')" @cancel="isOpen = false" />
     </div>
   </div>
 </template>

@@ -60,7 +60,7 @@ function onClick() {
   }
 
   copy(formatColorValue(props.color, props.format))
-  trackInteraction('copy_shade', 'click')
+  trackInteraction('copy_shade')
 }
 
 const pinTitle = computed(() => props.isAnchor ? 'Edit or remove this anchor color' : 'Pin this shade as an anchor color')

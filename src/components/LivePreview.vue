@@ -7,7 +7,7 @@ import { usePreferences } from '@/composables/preferences'
 import { generateColorScale } from '@/services/colors'
 import { formatRatio, contrastLevel, contrastRatio, shadeContrast } from '@/services/contrast'
 import { hueOf } from '@/services/format'
-import { trackInteraction } from '@/services/analytics'
+import { track, trackInteraction } from '@/services/analytics'
 
 const props = defineProps<{ palettes: Palette[] }>()
 
@@ -99,9 +99,14 @@ function theme(mode: Mode) {
 
 const modes = computed(() => (['light', 'dark'] as Mode[]).map((mode) => ({ mode, ...theme(mode) })))
 
+function onPrimaryChange(event: Event) {
+  const mode = (event.target as HTMLSelectElement).value === MIXED ? 'mixed' : 'single'
+  track('preview_primary', { mode })
+}
+
 function toggle() {
   isOpen.value = !isOpen.value
-  trackInteraction('preview_toggle', 'click')
+  trackInteraction('preview_toggle')
 }
 </script>
 
@@ -122,14 +127,14 @@ function toggle() {
       <div class="mb-4 flex flex-wrap items-end justify-end gap-3">
         <label class="text-xs font-semibold text-muted">
           <span class="eyebrow mb-1 block">Primary</span>
-          <select v-model="primaryName" class="field select-field w-40 py-1.5" @change="trackInteraction('preview_primary', 'click')">
+          <select v-model="primaryName" class="field select-field w-40 py-1.5" @change="onPrimaryChange">
             <option v-if="palettes.length > 1" :value="MIXED">Mixed (all palettes)</option>
             <option v-for="palette in palettes" :key="palette.name" :value="palette.name">{{ palette.name }}</option>
           </select>
         </label>
         <label class="text-xs font-semibold text-muted">
           <span class="eyebrow mb-1 block">Neutrals</span>
-          <select v-model="neutralName" class="field select-field w-40 py-1.5" @change="trackInteraction('preview_neutral', 'click')">
+          <select v-model="neutralName" class="field select-field w-40 py-1.5" @change="trackInteraction('preview_neutral')">
             <option :value="AUTO">Auto (tinted)</option>
             <option v-for="palette in palettes" :key="palette.name" :value="palette.name">{{ palette.name }}</option>
           </select>

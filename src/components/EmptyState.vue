@@ -16,7 +16,7 @@ import { COLOR_STEPS, QUICK_COLORS } from '@/constants'
 import { setAmbient } from '@/composables/ambient'
 import { generateColorScale, generatePaletteFromColor } from '@/services/colors'
 import { formatColorValue } from '@/services/format'
-import { trackInteraction } from '@/services/analytics'
+import { trackInteraction, type ColorSource } from '@/services/analytics'
 
 export type SamplePalette = {
   background: string
@@ -28,7 +28,7 @@ export type SamplePalette = {
 }
 
 const emit = defineEmits<{
-  (e: 'generate', color: string): void
+  (e: 'generate', color: string, source: ColorSource): void
   (e: 'use-palettes', palettes: Palette[], source: string): void
 }>()
 const showcase = QUICK_COLORS.map((color) => ({ ...color, colors: generateColorScale(color.hex) }))
@@ -105,7 +105,7 @@ function generateSamplePalette(): SamplePalette {
 
 function randomizeSample(index: number) {
   palettes.value[index] = generateSamplePalette()
-  trackInteraction('randomize_sample', 'click')
+  trackInteraction('randomize_sample')
 }
 
 function convertSampleToPalettes(sample?: SamplePalette): Palette[] {
@@ -132,7 +132,7 @@ function useSample(index: number, source: string) {
 }
 
 function surpriseMe() {
-  emit('generate', formatHex(randomOKLCHColor()))
+  emit('generate', formatHex(randomOKLCHColor()), 'surprise_me')
 }
 
 palettes.value = Array.from({ length: 3 }, generateSamplePalette)
@@ -167,7 +167,7 @@ const features = [
       </p>
 
       <div class="animate-rise mx-auto mt-8 max-w-xl [animation-delay:180ms]">
-        <ColorPicker size="lg" @change="emit('generate', $event)" />
+        <ColorPicker size="lg" @change="(color, source) => emit('generate', color, source)" />
       </div>
 
       <div class="animate-rise mt-5 flex flex-wrap items-center justify-center gap-2 [animation-delay:240ms]"
@@ -175,12 +175,12 @@ const features = [
         <span class="mr-1 text-xs font-medium text-faint">Or start from</span>
         <button v-for="(color, index) in showcase" :key="color.name" type="button"
           class="button button-outline button-sm gap-1.5 capitalize" @mouseenter="previewChip(index)" @focus="previewChip(index)"
-          @click="emit('generate', color.hex); trackInteraction(`quick_color_${color.name}`, 'click')">
+          @click="emit('generate', color.hex, 'quick_color')">
           <span class="size-3 rounded-full ring-1 ring-black/10" :style="{ backgroundColor: color.hex }"></span>
           {{ color.name }}
         </button>
         <button type="button" class="button button-ghost button-sm gap-1.5"
-          @click="surpriseMe(); trackInteraction('surprise_me', 'click')">
+          @click="surpriseMe()">
           <IconAwesome class="size-4" />
           Surprise me
         </button>

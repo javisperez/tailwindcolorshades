@@ -120,7 +120,7 @@ function nudge(key: Channel, delta: number) {
 
 function onApply() {
   emit('apply', oklchString.value)
-  trackInteraction('color_picker_apply', 'click')
+  trackInteraction('color_picker_apply')
 }
 
 watch(values, syncStrings, { deep: true })

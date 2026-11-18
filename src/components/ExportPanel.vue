@@ -42,7 +42,7 @@ const hint = computed(() => {
 
 function onCopyLink() {
   copyLink(window.location.href)
-  trackInteraction('copy_share_link', 'click')
+  trackInteraction('copy_share_link')
 }
 </script>
 

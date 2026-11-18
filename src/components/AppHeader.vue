@@ -6,7 +6,7 @@ import IconMoon from '~icons/mdi/weather-night'
 import ColorPicker from './ColorPicker.vue'
 import { usePreferences } from '@/composables/preferences'
 import { GITHUB_URL } from '@/constants'
-import { trackInteraction } from '@/services/analytics'
+import { trackInteraction, type ColorSource } from '@/services/analytics'
 
 defineProps<{
   // Once there are palettes the color input lives in the header; before that it is in the hero.
@@ -14,7 +14,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'generate', color: string): void
+  (e: 'generate', color: string, source: ColorSource): void
   (e: 'import'): void
 }>()
 
@@ -43,13 +43,13 @@ function toggleTheme() {
       </a>
 
       <div v-if="hasPalettes" class="order-last w-full md:order-none md:mx-auto md:w-auto md:max-w-md md:flex-1">
-        <ColorPicker @change="emit('generate', $event)" />
+        <ColorPicker @change="(color, source) => emit('generate', color, source)" />
       </div>
       <div v-else class="hidden md:block md:flex-1"></div>
 
       <div class="flex items-center gap-1.5">
         <button type="button" class="button button-outline button-sm max-md:size-8 max-md:px-0" aria-label="Import config"
-          @click="emit('import'); trackInteraction('import_modal_open', 'click')">
+          @click="emit('import'); trackInteraction('import_modal_open')">
           <IconUpload class="size-4" />
           <span class="max-md:hidden">Import</span>
         </button>
