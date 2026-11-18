@@ -1,84 +1,113 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { onClickOutside } from '@vueuse/core'
-import IconRightArrow from '~icons/mdi/arrow-right'
+import { computed, ref, watch } from 'vue'
+import { onClickOutside, useEventListener } from '@vueuse/core'
+import { formatCss, formatHex, parse, type Color } from 'culori'
+import IconArrowRight from '~icons/mdi/arrow-right'
 import ColorPickerPopup from './ColorPickerPopup.vue'
+import { track, type ColorSource } from '@/services/analytics'
 
-const props = defineProps<{
-  modelValue?: string
-}>()
+const props = withDefaults(defineProps<{
+  size?: 'md' | 'lg'
+}>(), {
+  size: 'md'
+})
 
 const emit = defineEmits<{
-  (e: 'change', color: string): void
+  (e: 'change', color: string, source: ColorSource): void
 }>()
 
+const draft = ref('')
 const isOpen = ref(false)
-const oklchString = ref('')
-const dropdownRef = ref<HTMLElement | null>(null)
+const hasError = ref(false)
+const rootRef = ref<HTMLElement | null>(null)
 
-function openDropdown() {
-  isOpen.value = true
-}
-
-function onColorSelection(color: string) {
-  oklchString.value = color
-  emit('change', color)
-  isOpen.value = false
-}
-
-function onCancel() {
-  isOpen.value = false
-}
-
-function resetStates() {
-  oklchString.value = ''
-  isOpen.value = false
-}
-
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    oklchString.value = newValue
-  } else {
-    resetStates()
+function parseInput(raw: string): Color | undefined {
+  const value = raw.trim()
+  if (!value) {
+    return undefined
   }
-}, { immediate: true })
 
-onClickOutside(dropdownRef, () => {
+  // Accept hex without the leading #
+  return parse(value) ?? (/^[0-9a-f]{3,8}$/i.test(value) ? parse(`#${value}`) : undefined)
+}
+
+const parsed = computed(() => parseInput(draft.value))
+const swatchColor = computed(() => (parsed.value ? formatCss(parsed.value) : ''))
+const isLarge = computed(() => props.size === 'lg')
+
+function normalize(color: Color): string {
+  return color.mode === 'rgb' ? formatHex(color) : formatCss(color)
+}
+
+function emitColor(color: string, source: ColorSource) {
+  emit('change', color, source)
+  draft.value = ''
   isOpen.value = false
+  hasError.value = false
+}
+
+function submit() {
+  if (!draft.value.trim()) {
+    isOpen.value = !isOpen.value
+    return
+  }
+
+  if (!parsed.value) {
+    hasError.value = true
+    track('color_input_invalid', { input: draft.value.trim().slice(0, 20) })
+    return
+  }
+
+  emitColor(normalize(parsed.value), 'typed')
+}
+
+watch(draft, () => {
+  hasError.value = false
+})
+
+onClickOutside(rootRef, () => {
+  isOpen.value = false
+})
+
+useEventListener(document, 'keydown', (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    isOpen.value = false
+  }
 })
 </script>
 
 <template>
-  <div class="relative w-full max-w-xs group"
-    :class="{ 'is-open': isOpen }"
-    ref="dropdownRef">
-    <!-- Input Field -->
-    <div class="relative z-10 flex items-center border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-slate-800 text-sm group-[.is-open]:!border-gray-300 dark:group-[.is-open]:!border-gray-400 focus-within:border-gray-300 dark:focus-within:border-gray-400">
-      <div class="inline-block size-6 shrink-0 grow-0 rounded-full mr-2 relative left-2 border border-gray-200 dark:border-gray-600 transition-color duration-150"
-        :style="{ backgroundColor: oklchString }"></div>
-      <input type="text"
-        class="flex-1 appearance-none p-0 bg-transparent border-none px-1 focus:outline-none focus:ring-0"
-        placeholder="Add a color"
-        :value="oklchString"
-        readonly
-        @focus="openDropdown()"
-        @click="openDropdown()"
-        @keyup.esc="isOpen = false">
+  <div ref="rootRef" class="relative w-full">
+    <form class="flex items-center gap-2 rounded-full border bg-panel pr-1.5 pl-2 transition focus-within:ring-4 focus-within:ring-ink/10"
+      :class="[
+        isLarge ? 'h-14 shadow-[var(--shadow-card)]' : 'h-10',
+        hasError ? 'border-red-500 focus-within:ring-red-500/15' : 'border-line-strong focus-within:border-ink/40'
+      ]"
+      @submit.prevent="submit">
+      <button type="button" class="shrink-0 rounded-full ring-1 ring-line-strong transition hover:scale-105"
+        :class="isLarge ? 'size-9' : 'size-6'"
+        :style="{ background: swatchColor || 'conic-gradient(from 90deg, #f43f5e, #f59e0b, #10b981, #0ea5e9, #8b5cf6, #f43f5e)' }"
+        aria-label="Open the color picker" :aria-expanded="isOpen" @click="isOpen = !isOpen"></button>
 
-      <button type="button" :disabled="!oklchString" class="rounded-2xl disabled:opacity-0 text-green-500 hover:text-green-600 py-1 px-1.5 relative right-1"
-        @click="onColorSelection(oklchString)">
-        <IconRightArrow class="w-6 h-6" />
+      <input v-model="draft" type="text" spellcheck="false" autocomplete="off" aria-label="Color value"
+        :aria-invalid="hasError"
+        class="min-w-0 flex-1 bg-transparent px-1 outline-none placeholder:text-faint"
+        :class="isLarge ? 'text-base sm:text-lg' : 'text-sm'"
+        :placeholder="isLarge ? 'Paste a color, e.g. #6366f1' : 'Add a color: #hex, oklch, name'" />
+
+      <button type="submit" class="button button-primary shrink-0" :class="isLarge ? 'h-11 px-3.5 sm:px-5' : 'button-sm size-7 px-0'"
+        :aria-label="draft ? 'Generate palette' : 'Open the color picker'">
+        <span v-if="isLarge" class="max-sm:hidden">Generate</span>
+        <IconArrowRight :class="isLarge ? 'size-5' : 'size-4'" />
       </button>
-    </div>
+    </form>
 
-    <!-- Color Picker Popup (positioned absolutely below input) -->
-    <div v-if="isOpen" class="absolute top-10 left-0 z-10">
-      <ColorPickerPopup
-        :initial-color="oklchString"
-        @apply="onColorSelection"
-        @cancel="onCancel"
-        :inline="true"
-      />
+    <p v-if="hasError" role="alert" class="absolute top-full left-5 mt-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+      Couldn't read that color. Try a hex like #6366f1, rgb(), oklch() or a color name.
+    </p>
+
+    <div v-if="isOpen" class="animate-pop card absolute top-full left-1/2 z-40 mt-2 -translate-x-1/2 shadow-[var(--shadow-pop)]">
+      <ColorPickerPopup :initial-color="swatchColor" @apply="emitColor($event, 'picker')" @cancel="isOpen = false" />
     </div>
   </div>
 </template>

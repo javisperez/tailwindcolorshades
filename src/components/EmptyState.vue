@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { formatCss, parse } from 'culori'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
+import { useIntervalFn, useMediaQuery } from '@vueuse/core'
+import { formatCss, formatHex, parse } from 'culori'
 import IconShuffle from '~icons/mdi/shuffle'
 import IconBarChart from '~icons/mdi/bar-chart'
 import IconArrowForward from '~icons/mdi/arrow-forward'
 import IconAwesome from '~icons/mdi/auto-awesome'
-import { generatePalettesQueryString } from '@/services/utils'
-import { generatePaletteFromColor } from '@/services/colors'
-import { trackColorEvent, trackInteraction } from '@/services/analytics'
+import IconEye from '~icons/mdi/eye-outline'
+import IconTailwind from '~icons/mdi/tailwind'
+import IconContrast from '~icons/mdi/contrast-circle'
+import IconLink from '~icons/mdi/link-variant'
+import ColorPicker from './ColorPicker.vue'
+import type { Palette } from './ColorPalette.vue'
+import { COLOR_STEPS, QUICK_COLORS } from '@/constants'
+import { setAmbient } from '@/composables/ambient'
+import { generateColorScale, generatePaletteFromColor } from '@/services/colors'
+import { formatColorValue } from '@/services/format'
+import { trackInteraction, type ColorSource } from '@/services/analytics'
 
 export type SamplePalette = {
   background: string
@@ -18,13 +27,52 @@ export type SamplePalette = {
   highlight: string
 }
 
+const emit = defineEmits<{
+  (e: 'generate', color: string, source: ColorSource): void
+  (e: 'use-palettes', palettes: Palette[], source: string): void
+}>()
+const showcase = QUICK_COLORS.map((color) => ({ ...color, colors: generateColorScale(color.hex) }))
+const activeIndex = ref(0)
+const active = computed(() => showcase[activeIndex.value])
+const activeVariable = computed(
+  () => `--color-${active.value.name}-500: ${formatColorValue(active.value.colors[500], 'oklch')};`
+)
+
+const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+
+function showColor(index: number) {
+  activeIndex.value = index
+  setAmbient(showcase[index].colors)
+}
+
+const { pause, resume } = useIntervalFn(() => showColor((activeIndex.value + 1) % showcase.length), 3400, {
+  immediate: false
+})
+
+function previewChip(index: number) {
+  pause()
+  showColor(index)
+}
+
+function resumeCycle() {
+  if (!prefersReducedMotion.value) {
+    resume()
+  }
+}
+
+onMounted(() => {
+  showColor(0)
+  resumeCycle()
+})
+
+onBeforeUnmount(pause)
 const palettes = ref<SamplePalette[]>([])
 
 function randomOKLCHColor() {
   return {
     mode: 'oklch' as const,
-    l: (0.5 + Math.random() * 0.2).toFixed(2) as unknown as number,
-    c: (0.1 + Math.random() * 0.2).toFixed(2) as unknown as number,
+    l: Number((0.5 + Math.random() * 0.2).toFixed(2)),
+    c: Number((0.1 + Math.random() * 0.2).toFixed(2)),
     h: Math.floor(Math.random() * 360)
   }
 }
@@ -51,201 +99,226 @@ function generateSamplePalette(): SamplePalette {
     primary: formatCss(primary) || '',
     secondary: formatCss(rotateHue(primary, 30)) || '',
     accent: formatCss(rotateHue(primary, 180)) || '',
-    highlight: formatCss({ ...primary, l: Math.min(primary.l + 0.2, 0.98), c: primary.c * 0.5 }) || '',
+    highlight: formatCss({ ...primary, l: Math.min(primary.l + 0.2, 0.98), c: primary.c * 0.5 }) || ''
   }
 }
 
-function generateSamplePalettes(count: number) {
-  palettes.value = Array.from({ length: count }, () => generateSamplePalette())
+function randomizeSample(index: number) {
+  palettes.value[index] = generateSamplePalette()
+  trackInteraction('randomize_sample')
 }
 
-function randomizePaletteColors(paletteIndex: number) {
-  const newPalette = generateSamplePalette()
-  palettes.value[paletteIndex] = newPalette
-
-  // Track sample randomization
-  trackInteraction('randomize_sample', 'click')
-}
-
-function generateRandomColor() {
-  const random = formatCss(randomOKLCHColor()) || ''
-  // format as palette
-  return generatePaletteFromColor(random)
-}
-
-function convertSampleToPalettes(sample?: SamplePalette) {
-  // Safety check for undefined sample
+function convertSampleToPalettes(sample?: SamplePalette): Palette[] {
   if (!sample) {
-    return [generatePaletteFromColor(formatCss(randomOKLCHColor()) || '')]
+    return []
   }
 
-  // Generate a palette for each color in the sample
-  // Filter out any invalid colors using Culori's parse function
-  const palettesToGenerate: Array<{ color: string; name: string }> = [
+  const colors: Array<{ color: string, name: string }> = [
     { color: sample.background, name: 'background' },
     { color: sample.text, name: 'text' },
     { color: sample.primary, name: 'primary' },
     { color: sample.secondary, name: 'secondary' },
     { color: sample.accent, name: 'accent' },
-    { color: sample.highlight, name: 'highlight' },
+    { color: sample.highlight, name: 'highlight' }
   ]
 
-  return palettesToGenerate
-    .filter(({ color }) => {
-      // Check if color is a valid string and can be parsed by Culori
-      if (!color || color.trim() === '') return false
-      const parsed = parse(color)
-      return parsed !== undefined
-    })
-    .map(({ color, name }) => ({
-      ...generatePaletteFromColor(color),
-      name
-    }))
+  return colors
+    .filter(({ color }) => Boolean(color) && parse(color) !== undefined)
+    .map(({ color, name }) => ({ ...generatePaletteFromColor(color), name }))
 }
 
-onMounted(() => {
-  generateSamplePalettes(3)
-})
+function useSample(index: number, source: string) {
+  emit('use-palettes', convertSampleToPalettes(palettes.value[index]), source)
+}
+
+function surpriseMe() {
+  emit('generate', formatHex(randomOKLCHColor()), 'surprise_me')
+}
+
+palettes.value = Array.from({ length: 3 }, generateSamplePalette)
+
+const features = [
+  { icon: IconEye, title: 'Perceptually even', text: 'Shades are mixed in OKLCH, so steps look evenly spaced and keep their character.' },
+  { icon: IconTailwind, title: 'Tailwind v3 and v4', text: 'Copy an @theme block or a config object, in OKLCH or HEX.' },
+  { icon: IconContrast, title: 'WCAG contrast built in', text: 'Every shade shows its AA / AAA rating against white and black text.' },
+  { icon: IconLink, title: 'Shareable by URL', text: 'Your palettes live in the link. Send it to a teammate, no account needed.' }
+]
 </script>
 
 <template>
-<div>
-  <div class="text-center">
-    <div class="flex justify-center mb-6">
-      <div class="w-16 h-16 rounded-full bg-pink-200 dark:bg-pink-500 -mr-4 border-4 border-gray-50 dark:border-gray-900"></div>
-      <div class="w-16 h-16 rounded-full bg-purple-200 dark:bg-purple-500 -mr-4 border-4 border-gray-50 dark:border-gray-900"></div>
-      <div class="w-16 h-16 rounded-full bg-blue-200 dark:bg-blue-500 -mr-4 border-4 border-gray-50 dark:border-gray-900"></div>
-      <div class="w-16 h-16 rounded-full bg-green-200 dark:bg-green-500 -mr-4 border-4 border-gray-50 dark:border-gray-900"></div>
-      <div class="w-16 h-16 rounded-full bg-yellow-200 dark:bg-yellow-500 border-4 border-gray-50 dark:border-gray-900"></div>
+  <div class="relative">
+    <div class="hero-grid" aria-hidden="true"></div>
+
+    <!-- Hero -->
+    <div class="mx-auto max-w-4xl px-4 pt-12 text-center md:pt-20">
+      <p class="pill animate-rise">
+        <span class="size-1.5 rounded-full bg-emerald-500"></span>
+        Free · No sign-up · Runs in your browser
+      </p>
+
+      <h1 class="animate-rise mt-6 font-display text-[2.6rem] leading-[1.02] font-extrabold tracking-tight [animation-delay:60ms] sm:text-6xl md:text-7xl">
+        Turn any color into a
+        <span class="text-gradient">Tailwind palette</span>
+      </h1>
+
+      <p class="animate-rise mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted [animation-delay:120ms] md:text-lg">
+        Get a balanced 50–950 scale in OKLCH or HEX, with WCAG contrast checks and a live UI preview.
+        Paste it straight into Tailwind v4 or v3.
+      </p>
+
+      <div class="animate-rise mx-auto mt-8 max-w-xl [animation-delay:180ms]">
+        <ColorPicker size="lg" @change="(color, source) => emit('generate', color, source)" />
+      </div>
+
+      <div class="animate-rise mt-5 flex flex-wrap items-center justify-center gap-2 [animation-delay:240ms]"
+        @mouseleave="resumeCycle">
+        <span class="mr-1 text-xs font-medium text-faint">Or start from</span>
+        <button v-for="(color, index) in showcase" :key="color.name" type="button"
+          class="button button-outline button-sm gap-1.5 capitalize" @mouseenter="previewChip(index)" @focus="previewChip(index)"
+          @click="emit('generate', color.hex, 'quick_color')">
+          <span class="size-3 rounded-full ring-1 ring-black/10" :style="{ backgroundColor: color.hex }"></span>
+          {{ color.name }}
+        </button>
+        <button type="button" class="button button-ghost button-sm gap-1.5"
+          @click="surpriseMe()">
+          <IconAwesome class="size-4" />
+          Surprise me
+        </button>
+      </div>
     </div>
-    <h1 class="text-3xl font-bold text-zinc-900 dark:text-white mb-2">TailwindCSS palette generator</h1>
-    <p class="text-zinc-500 dark:text-slate-500">Enter a color or let us surprise you!</p>
-    <a :href="`?${generatePalettesQueryString([generateRandomColor()])}`"
-      class="button button-borderless px-9 bg-zinc-900 dark:bg-sky-600 dark:text-slate-900 text-white mt-6"
-      @click="trackColorEvent('generate', { color_value: 'random' })">
-      Surprise Me
-      <IconAwesome class="ml-3" />
-    </a>
-  </div>
-  <div class="text-center mt-24">
-    <h3 class="text-xl font-bold text-zinc-900 dark:text-white">Sample Random Palettes</h3>
-    <p class="text-zinc-500 dark:text-slate-500 flex items-center justify-center"> Get started with these combinations </p>
-  </div>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
-    <div class="empty-state-sample-card">
-      <div class="*:transition-colors">
-        <h4 class="font-semibold text-lg text-zinc-900 dark:text-white mb-4">E-commerce</h4>
-        <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl p-4"
-          :style="{
-            'backgroundColor': palettes[0]?.background,
-            'color': palettes[0]?.text
-          }">
-          <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center space-x-2">
-              <img alt="User Avatar" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCp8cwM-FOW_vg0jYX15NP_4vTLM-ZEc4x8j00VMuTG5LpzBXRbiY1kRZM6fHLlcE6oi0_3-y11uavKsyifeLBnugvoHsp-99Bm90V7zTRZsFIoQuVZ2yFike2ZzIQCKj5eq3r1v5IkpWjm_LEPxuBEIlF6fbOPaWBZAIz6l-nwhsWvo6gp6TmC5EwTYQS3E26j-CrBnKoDIgnIxeZGMwX9jzoCqe4dBaqsBDq2K87oJV-t-Dx-O6FWLJjDQiFYEq19Uy2CueS3i-c" />
-              <div>
-                <p class="font-medium text-sm"
-                  :style="{ color: palettes[0]?.primary}">Olivia</p>
-                <p class="text-zinc-500 dark:text-slate-500 text-xs"
-                  :style="{ color: palettes[0]?.secondary}">Product Designer</p>
+
+    <!-- Live showcase -->
+    <div class="animate-rise mx-auto mt-14 max-w-4xl px-4 [animation-delay:300ms]">
+      <div class="card p-3 sm:p-4" aria-hidden="true">
+        <div class="grid grid-cols-11 gap-1.5 sm:gap-2">
+          <div v-for="(step, index) in COLOR_STEPS" :key="step" class="flex flex-col items-center gap-2">
+            <div class="h-24 w-full rounded-lg ring-1 ring-black/5 transition-colors duration-700 sm:h-32 sm:rounded-xl md:h-36"
+              :style="{ backgroundColor: active.colors[step], transitionDelay: `${index * 40}ms` }"></div>
+            <span class="text-[10px] font-semibold text-faint sm:text-xs">{{ step }}</span>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center justify-between gap-3 rounded-xl bg-sunken px-3.5 py-2.5 text-xs">
+          <code class="truncate text-muted">
+            <span class="text-ink">{{ activeVariable.split(':')[0] }}</span>:
+            <span class="tok-val" style="color: var(--code-val)">{{ activeVariable.split(': ')[1] }}</span>
+          </code>
+          <span class="shrink-0 font-semibold capitalize text-faint">{{ active.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="mx-auto mt-16 grid max-w-5xl gap-3 px-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div v-for="feature in features" :key="feature.title" class="rounded-2xl border border-line bg-panel/60 p-5 backdrop-blur">
+        <component :is="feature.icon" class="size-6 text-accent-a" />
+        <h3 class="mt-3 font-display font-bold">{{ feature.title }}</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-muted">{{ feature.text }}</p>
+      </div>
+    </div>
+
+    <!-- Samples -->
+    <div class="mx-auto mt-24 max-w-[1200px] px-4 lg:px-6">
+      <div class="text-center">
+        <p class="eyebrow">Not sure where to start?</p>
+        <h2 class="mt-2 font-display text-3xl font-extrabold tracking-tight">Try a ready-made combination</h2>
+        <p class="mt-2 text-muted">Each one generates a full set of palettes: background, text, primary, secondary, accent and highlight.</p>
+      </div>
+
+      <div class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Profile -->
+        <article class="card flex flex-col justify-between p-5">
+          <div class="flex flex-1 flex-col">
+            <h3 class="mb-3 font-display font-bold">Profile card</h3>
+            <div class="flex-1 rounded-xl border border-line p-4 transition-colors duration-500" aria-hidden="true"
+              :style="{ backgroundColor: palettes[0]?.background, color: palettes[0]?.text }">
+              <div class="mb-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="grid size-9 place-items-center rounded-full text-sm font-bold"
+                    :style="{ backgroundColor: palettes[0]?.primary, color: palettes[0]?.background }">O</span>
+                  <div>
+                    <p class="text-sm font-semibold" :style="{ color: palettes[0]?.primary }">Olivia</p>
+                    <p class="text-xs" :style="{ color: palettes[0]?.secondary }">Product Designer</p>
+                  </div>
+                </div>
+                <span class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                  :style="{ backgroundColor: palettes[0]?.highlight, color: palettes[0]?.text }">PRO</span>
+              </div>
+              <p class="mb-4 text-sm">“This new feature is a game-changer for our workflow. Highly recommend!”</p>
+              <div class="flex gap-2">
+                <span class="flex-1 rounded-lg py-2 text-center text-sm font-semibold"
+                  :style="{ backgroundColor: palettes[0]?.primary, color: palettes[0]?.background }">Upgrade</span>
+                <span class="flex-1 rounded-lg border py-2 text-center text-sm font-semibold"
+                  :style="{ borderColor: palettes[0]?.secondary }">Learn more</span>
               </div>
             </div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full"
-              :style="{ backgroundColor: palettes[0]?.highlight, color: palettes[0]?.text }">PRO</span>
           </div>
-          <p class="text-sm mb-4" > "This new feature is a game-changer for our workflow. Highly recommend!" </p>
-          <div class="flex items-center space-x-2">
-            <button class="flex-1 button border-transparent!"
-              :style="{ backgroundColor: palettes[0]?.primary, color: palettes[0]?.text }">
-              Upgrade
+          <div class="mt-4 flex items-center justify-between gap-2">
+            <button type="button" class="button button-primary button-sm" @click="useSample(0, 'sample_profile')">Use this palette</button>
+            <button type="button" class="button button-ghost button-sm" @click="randomizeSample(0)">
+              <IconShuffle class="size-4" /> Randomize
             </button>
-            <button class="flex-1 border-zinc-200 dark:border-zinc-700 button"
-              :style="{ color: palettes[0]?.text }">
-              Learn More</button>
           </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 justify-between mt-4">
-        <a :href="`?${generatePalettesQueryString(convertSampleToPalettes(palettes[0]))}`"
-          class="button bg-zinc-900 text-white"
-          @click="trackColorEvent('generate', { color_value: 'sample_ecommerce' })">
-          Use this palette
-        </a>
-        <button class="button button-borderless text-zinc-500 dark:text-slate-500"
-          @click="randomizePaletteColors(0)">
-          <IconShuffle />
-          <span>Randomize</span>
-        </button>
-      </div>
-    </div>
-    <div class="empty-state-sample-card">
-      <div class="*:transition-colors">
-        <h4 class="font-semibold text-lg text-zinc-900 dark:text-white mb-4">SaaS Dashboard</h4>
-        <div class="border border-zinc-200 rounded-xl p-4"
-          :style="{
-            'backgroundColor': palettes[1]?.background,
-            'color': palettes[1]?.text
-          }">
-          <div class="flex items-center mb-3">
-            <IconBarChart class="mr-2" :style="{ color: palettes[1]?.primary }"></IconBarChart>
-            <h5 class="font-semibold">Monthly Sales</h5>
+        </article>
+
+        <!-- Dashboard -->
+        <article class="card flex flex-col justify-between p-5">
+          <div class="flex flex-1 flex-col">
+            <h3 class="mb-3 font-display font-bold">SaaS dashboard</h3>
+            <div class="flex-1 rounded-xl border border-line p-4 transition-colors duration-500" aria-hidden="true"
+              :style="{ backgroundColor: palettes[1]?.background, color: palettes[1]?.text }">
+              <div class="mb-3 flex items-center gap-2">
+                <IconBarChart class="size-5" :style="{ color: palettes[1]?.primary }" />
+                <h4 class="text-sm font-semibold">Monthly sales</h4>
+              </div>
+              <p class="text-4xl font-extrabold tracking-tight">$23,458</p>
+              <p class="mt-1 flex items-center text-sm font-medium" :style="{ color: palettes[1]?.primary }">
+                <IconArrowForward class="mr-1 size-4 -rotate-45" /> 12% from last month
+              </p>
+              <div class="mt-4 flex h-14 items-end gap-1.5">
+                <span v-for="(height, i) in [38, 55, 42, 70, 60, 85, 100]" :key="i" class="flex-1 rounded-t-md"
+                  :style="{ height: `${height}%`, backgroundColor: i === 6 ? palettes[1]?.accent : palettes[1]?.highlight }"></span>
+              </div>
+            </div>
           </div>
-          <p class="text-4xl font-extrabold mb-1" :style="{ color: palettes[1]?.text }">$23,458</p>
-          <p class="text-sm flex items-center" :style="{ color: palettes[1]?.primary }">
-            <IconArrowForward class="text-base mr-1"></IconArrowForward> 12% from last month
-          </p>
-          <div class="mt-4 h-2 w-full bg-zinc-200 rounded-full">
-            <div class="h-2 rounded-full" :style="{ width: '75%', backgroundColor: palettes[1]?.accent }"></div>
+          <div class="mt-4 flex items-center justify-between gap-2">
+            <button type="button" class="button button-primary button-sm" @click="useSample(1, 'sample_dashboard')">Use this palette</button>
+            <button type="button" class="button button-ghost button-sm" @click="randomizeSample(1)">
+              <IconShuffle class="size-4" /> Randomize
+            </button>
           </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 justify-between mt-4">
-        <a :href="`?${generatePalettesQueryString(convertSampleToPalettes(palettes[1]))}`"
-          class="button bg-zinc-900! text-white"
-          @click="trackColorEvent('generate', { color_value: 'sample_dashboard' })">
-          Use this palette
-        </a>
-        <button class="button button-borderless text-zinc-500 dark:text-slate-500"
-          @click="randomizePaletteColors(1)">
-          <IconShuffle />
-          <span>Randomize</span>
-        </button>
-      </div>
-    </div>
-    <div class="empty-state-sample-card">
-      <div class="*:transition-colors">
-        <h4 class="font-semibold text-lg text-zinc-900 dark:text-white mb-4">Blog Post</h4>
-        <div class="border border-zinc-200 rounded-xl overflow-hidden"
-          :style="{
-            'backgroundColor': palettes[2]?.background,
-            'color': palettes[2]?.text
-          }">
-          <img alt="Mountain landscape" class="w-full h-32 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6S78Djh93QcxrYxnHA_9-Q0gU4wM4ZBDTYDne5xKQj_skD6fNqa67l5A185-j5GEjgtpofy0_ZbV4Q1wPqemIJjDPEEL9pDxhDah2DCwOrV5Py2FNVcYl-nyGRAJVhoHlrza4j52_BrxrLIrfhlro5SlaPezXVBGDVcxBFPvwZsS_AoUJuduBkqa-JOkwdOEWSjuSQeUIp4omR5-DwjOoTf5ZW4jFJGcJqFpvp6S7M9bwvtuYnMdhBhlRF6l6xhv27HSsemW2ftE" />
-          <div class="p-4">
-            <span class="text-xs font-semibold uppercase"
-              :style="{ color: palettes[2]?.primary }">Travel</span>
-            <h5 class="font-bold mt-1 mb-2"
-              :style="{ color: palettes[2]?.secondary }">Exploring the Alps</h5>
-            <p class="text-sm mb-4"> A journey through stunning landscapes and picturesque villages. </p>
-            <a class="font-semibold hover:underline text-sm flex items-center" href="#"
-              :style="{ color: palettes[2]?.primary }"> Read More <IconArrowForward class="text-base ml-1"></IconArrowForward>
-            </a>
+        </article>
+
+        <!-- Blog -->
+        <article class="card flex flex-col justify-between p-5 md:col-span-2 lg:col-span-1">
+          <div class="flex flex-1 flex-col">
+            <h3 class="mb-3 font-display font-bold">Blog post</h3>
+            <div class="flex-1 overflow-hidden rounded-xl border border-line transition-colors duration-500" aria-hidden="true"
+              :style="{ backgroundColor: palettes[2]?.background, color: palettes[2]?.text }">
+              <svg viewBox="0 0 320 120" class="block h-28 w-full" preserveAspectRatio="xMidYMid slice">
+                <rect width="320" height="120" :fill="palettes[2]?.highlight" />
+                <circle cx="248" cy="38" r="16" :fill="palettes[2]?.accent" />
+                <path d="M0 120 L70 46 L120 92 L190 24 L270 120 Z" :fill="palettes[2]?.secondary" />
+                <path d="M60 120 L140 64 L210 120 Z" :fill="palettes[2]?.primary" />
+              </svg>
+              <div class="p-4">
+                <span class="text-xs font-semibold uppercase" :style="{ color: palettes[2]?.primary }">Travel</span>
+                <h4 class="mt-1 mb-2 font-bold" :style="{ color: palettes[2]?.secondary }">Exploring the Alps</h4>
+                <p class="mb-3 text-sm">A journey through stunning landscapes and picturesque villages.</p>
+                <span class="flex items-center text-sm font-semibold" :style="{ color: palettes[2]?.primary }">
+                  Read more <IconArrowForward class="ml-1 size-4" />
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 justify-between mt-4">
-        <a :href="`?${generatePalettesQueryString(convertSampleToPalettes(palettes[2]))}`"
-          class="button bg-zinc-900! text-white"
-          @click="trackColorEvent('generate', { color_value: 'sample_blog' })">
-          Use this palette
-        </a>
-        <button class="button button-borderless text-zinc-500 dark:text-slate-500"
-          @click="randomizePaletteColors(2)">
-          <IconShuffle />
-          <span>Randomize</span>
-        </button>
+          <div class="mt-4 flex items-center justify-between gap-2">
+            <button type="button" class="button button-primary button-sm" @click="useSample(2, 'sample_blog')">Use this palette</button>
+            <button type="button" class="button button-ghost button-sm" @click="randomizeSample(2)">
+              <IconShuffle class="size-4" /> Randomize
+            </button>
+          </div>
+        </article>
       </div>
     </div>
   </div>
-</div>
 </template>

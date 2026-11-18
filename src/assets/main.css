@@ -1,49 +1,270 @@
 @import "tailwindcss";
 
 @theme {
-  --font-figtree: 'Figtree', sans-serif;
-  --default-font-family: var(--font-figtree);
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+
+  --animate-pop: pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  --animate-rise: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-wiggle: wiggle 700ms ease-in-out;
+
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-12deg); }
+    60% { transform: rotate(10deg); }
+  }
+}
+
+/* Semantic, theme-aware colors. Light/dark values live in the :root blocks below. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-kofi: var(--kofi);
+  --color-accent-a: var(--accent-a);
+  --color-accent-b: var(--accent-b);
 }
 
 /* Custom hover+focus variants */
 @custom-variant hocus (&:hover, &:focus-visible);
-
 @custom-variant hocus-within (&:hover, &:focus-within);
 
 /* Class based dark variant */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-@layer components {
-  .button,
-  .select {
-    @apply border border-zinc-300 dark:border-zinc-700;
-    @apply px-4 py-2 rounded-lg text-sm space-x-2;
-    @apply text-zinc-900 font-semibold hocus:dark:text-white;
-    @apply inline-flex items-center justify-center;
-    @apply transition-colors;
+/* The page takes on the color of the palette you are working on (see composables/ambient.ts).
+   Registered so the change animates smoothly instead of snapping. */
+@property --glow-a { syntax: '<color>'; inherits: true; initial-value: oklch(0.82 0.11 275); }
+@property --glow-b { syntax: '<color>'; inherits: true; initial-value: oklch(0.85 0.1 200); }
+@property --accent-a { syntax: '<color>'; inherits: true; initial-value: oklch(0.55 0.2 275); }
+@property --accent-b { syntax: '<color>'; inherits: true; initial-value: oklch(0.62 0.21 335); }
 
-    &.button-borderless {
-      @apply border-transparent bg-transparent text-zinc-900;
+:root {
+  color-scheme: light;
+  transition: --glow-a 900ms ease, --glow-b 900ms ease, --accent-a 900ms ease, --accent-b 900ms ease;
+
+  --canvas: #f7f7f5;
+  --panel: #ffffff;
+  --sunken: #efefeb;
+  --line: rgb(16 18 24 / 0.09);
+  --line-strong: rgb(16 18 24 / 0.17);
+  --ink: #101218;
+  --muted: #565b6b;
+  --faint: #878c9b;
+  --kofi: #ff5e5b;
+
+  --glow-strength: 34%;
+  --shadow-card: 0 1px 2px rgb(16 18 24 / 0.04), 0 10px 30px -14px rgb(16 18 24 / 0.14);
+  --shadow-pop: 0 24px 60px -16px rgb(16 18 24 / 0.35);
+  --code-val: color-mix(in oklch, var(--accent-a) 82%, black);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --canvas: #090a0e;
+  --panel: #13151b;
+  --sunken: #1a1d25;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --ink: #f3f4f7;
+  --muted: #a3a9b9;
+  --faint: #6f7686;
+
+  --glow-strength: 26%;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px -14px rgb(0 0 0 / 0.6);
+  --shadow-pop: 0 24px 60px -16px rgb(0 0 0 / 0.8);
+  --code-val: color-mix(in oklch, var(--accent-a) 55%, white);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+
+  button,
+  [role='button'],
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--ink) 75%, transparent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent-a) 30%, transparent);
+  }
+
+  code,
+  pre,
+  kbd {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .button {
+    @apply inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold whitespace-nowrap select-none;
+    @apply transition duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .button-sm {
+    @apply h-8 px-3 text-xs;
+  }
+
+  .button-primary {
+    @apply bg-ink text-canvas hover:opacity-85;
+  }
+
+  .button-outline {
+    @apply border border-line-strong bg-panel text-ink hover:bg-sunken;
+  }
+
+  .button-ghost {
+    @apply text-muted hover:bg-sunken hover:text-ink;
+  }
+
+  .button-kofi {
+    @apply bg-kofi text-white shadow-[0_6px_20px_-8px_var(--kofi)] hover:brightness-105;
+  }
+
+  .button-kofi:hover svg.coffee {
+    animation: var(--animate-wiggle);
+  }
+
+  .icon-button {
+    @apply inline-grid size-8 shrink-0 place-items-center rounded-lg text-muted transition duration-150;
+    @apply hover:bg-sunken hover:text-ink active:scale-90 disabled:pointer-events-none disabled:opacity-30;
+  }
+
+  /* Surfaces */
+  .card {
+    @apply rounded-2xl border border-line bg-panel;
+    box-shadow: var(--shadow-card);
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold tracking-[0.14em] text-faint uppercase;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-panel/70 px-3 py-1 text-xs font-medium text-muted backdrop-blur;
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(100deg, var(--accent-a), var(--accent-b));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Form controls */
+  .segmented {
+    @apply inline-flex w-full rounded-full bg-sunken p-0.5 text-xs font-semibold;
+
+    & > button {
+      @apply flex-1 rounded-full px-3 py-1.5 text-muted transition duration-150 hover:text-ink;
+    }
+
+    & > button[aria-pressed='true'] {
+      @apply bg-panel text-ink shadow-sm ring-1 ring-line;
     }
   }
 
-  .button:not(.select) {
-    @apply hocus:bg-zinc-200 hocus:dark:bg-gray-900 hocus:opacity-85;
-    @apply active:scale-98;
+  .switch {
+    @apply relative h-5 w-9 shrink-0 appearance-none rounded-full bg-line-strong transition duration-150;
+
+    &::after {
+      content: '';
+      @apply absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition duration-150;
+    }
+
+    &:checked {
+      @apply bg-ink;
+    }
+
+    &:checked::after {
+      @apply translate-x-4 bg-canvas;
+    }
   }
 
-  .select {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  .field {
+    @apply w-full rounded-xl border border-line-strong bg-sunken px-3 py-2 text-sm text-ink placeholder:text-faint;
+    @apply transition focus:border-ink/40 focus:outline-none focus:ring-4 focus:ring-ink/10;
+  }
+
+  .select-field {
+    @apply appearance-none pr-8;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238b90a0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.6' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.5rem center;
     background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-
-    @apply bg-white dark:bg-slate-900 dark:text-inherit;
-    @apply appearance-none rounded-md shadow-sm text-sm;
-    @apply focus:ring-indigo-500 focus:border-indigo-500;
+    background-size: 1.25em 1.25em;
   }
 
-  .empty-state-sample-card {
-    @apply bg-zinc-50 dark:bg-gray-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between;
+  /* Code */
+  .code-block {
+    @apply overflow-hidden rounded-xl border border-line bg-sunken;
+  }
+
+  .code-block pre {
+    @apply m-0 overflow-auto p-3.5 text-[11.5px] leading-relaxed text-muted;
+    scrollbar-width: thin;
+  }
+
+  .code-block .tok-var,
+  .code-block .tok-key {
+    @apply text-ink;
+  }
+
+  .code-block .tok-val {
+    color: var(--code-val);
+  }
+
+  .code-block .tok-dot {
+    @apply mr-1 inline-block size-2.5 translate-y-[1px] rounded-full ring-1 ring-black/10 dark:ring-white/20;
+  }
+
+  /* Page chrome */
+  .ambient {
+    @apply pointer-events-none fixed inset-0 -z-10;
+    background:
+      radial-gradient(55% 45% at 12% -5%, color-mix(in oklch, var(--glow-a) var(--glow-strength), transparent), transparent 72%),
+      radial-gradient(45% 40% at 92% 5%, color-mix(in oklch, var(--glow-b) var(--glow-strength), transparent), transparent 72%);
+  }
+
+  .hero-grid {
+    @apply pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px];
+    background-image: radial-gradient(var(--line-strong) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse 60% 70% at 50% 0%, black, transparent 75%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

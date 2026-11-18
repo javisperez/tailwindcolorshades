@@ -2,23 +2,16 @@ import type { Palette } from "@/components/ColorPalette.vue";
 import { ref, unref, watchEffect } from "vue";
 import type { MaybeRefOrGetter } from "vue";
 import { COLOR_STEPS } from "@/constants";
-import { parse, formatHex, formatCss, converter } from 'culori';
+import { formatColorValue, type ColorFormat } from "@/services/format";
 
-type ColorFormat = 'oklch' | 'hex';
 type ColorSteps = typeof COLOR_STEPS;
 type ConfigVersion = 'v4' | 'v3';
 type ColorsToInclude = Map<string, ColorSteps[number][]>;
 
-const toOklch = converter('oklch')
-
-// given a color string in either oklch or hex format, return it in the format of the preference
-function formatColorValue(color: string, format: ColorFormat): string {
-  const parsed = parse(color);
-  if (!parsed) {
-    return color;
-  }
-
-  return format === 'oklch' ? formatCss(toOklch(parsed)) : formatHex(parsed);
+// Palettes that were never customized (no entry in the map) include every shade.
+function isIncluded(palette: Palette, shade: number, colorsToIncludePerPalette: ColorsToInclude) {
+  const included = colorsToIncludePerPalette.get(palette.name);
+  return included ? included.includes(shade as ColorSteps[number]) : true;
 }
 
 // Source code for Tailwind CSS v4
@@ -26,8 +19,7 @@ function getV4Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncl
   const themeVariables = palettes.map((palette) =>
     Object.entries(palette.colors)
       .map(([shade, colorValue]) => {
-        const shadeNum = parseInt(shade) as (typeof COLOR_STEPS)[number];
-        if (!colorsToIncludePerPalette.get(palette.name)?.includes(shadeNum)) {
+        if (!isIncluded(palette, parseInt(shade), colorsToIncludePerPalette)) {
           return '';
         }
 
@@ -46,11 +38,10 @@ function getV3Config(palettes: Palette[], colorFormat: ColorFormat, colorsToIncl
     const shades = Object.keys(palette.colors);
     const shadesSource = shades.map(
       (shade: string) => {
-        const colorValue = formatColorValue(palette.colors[Number(shade)], colorFormat);
-        const shadeNum = parseInt(shade) as (typeof COLOR_STEPS)[number];
-        if (!colorsToIncludePerPalette.get(palette.name)?.includes(shadeNum)) {
+        if (!isIncluded(palette, parseInt(shade), colorsToIncludePerPalette)) {
           return '';
         }
+        const colorValue = formatColorValue(palette.colors[Number(shade)], colorFormat);
         return `  '${shade}': '${colorValue}'`;
       }
     ).filter(line => line !== '');
